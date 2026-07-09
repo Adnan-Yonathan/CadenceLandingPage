@@ -1,0 +1,9 @@
+# Source images not referenced by the page. Kept on disk, out of the repo.
+# IMG_9899.png is a wordmark lockup (mark + "Cadence"); the others are
+# alternate app screenshots.
+images/IMG_*.png
+
+# OS / editor cruft
+Thumbs.db
+desktop.ini
+.DS_Store

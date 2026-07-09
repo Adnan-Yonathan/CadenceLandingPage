@@ -1,0 +1,645 @@
+/* ==========================================================================
+   Cadence — landing page
+   Ported from the Claude Design source `Cadence.dc.html`.
+   Layout values match the source; type and grids are made fluid for mobile.
+   ========================================================================== */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* The hero glow is a large circle that deliberately bleeds past the right
+     edge. Clip on <html> too, or it still widens the scrollable area. */
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-root);
+  color: var(--text-1);
+  font-family: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+img { max-width: 100%; }
+
+/* Material Symbols Rounded */
+.msr {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  display: inline-block;
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Display type */
+.disp {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+  font-weight: 900;
+}
+
+.wrap { max-width: 1160px; margin: 0 auto; }
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--green-500);
+}
+
+.section-title { font-size: clamp(34px, 5vw, 52px); margin: 16px 0 0; }
+
+/* --------------------------------------------------------------------------
+   Reveal on scroll — progressive enhancement, no-ops without scroll timelines
+   -------------------------------------------------------------------------- */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: none; }
+}
+
+[data-reveal] {
+  animation: revealUp both cubic-bezier(.16, .8, .3, 1);
+  animation-timeline: view();
+  animation-range: entry 2% cover 20%;
+}
+
+@supports not (animation-timeline: view()) {
+  [data-reveal] { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* --------------------------------------------------------------------------
+   App Store badge
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  background: #000;
+  border: 1px solid #2a302d;
+  border-radius: 14px;
+  padding: 13px 24px;
+  transition: border-color .16s ease, transform .16s ease;
+}
+
+.badge:hover { border-color: var(--green-500); transform: translateY(-2px); }
+.badge:focus-visible { outline: 2px solid var(--green-500); outline-offset: 3px; }
+
+.badge__icon { flex: none; fill: #fff; }
+.badge__text { line-height: 1.1; text-align: left; }
+.badge__sm { display: block; font-size: 11px; color: var(--text-2); }
+.badge__lg { display: block; font-size: 20px; font-weight: 700; color: #fff; }
+
+/* Compact variant, used in the nav */
+.badge--sm { padding: 9px 16px; border-radius: 12px; gap: 9px; }
+.badge--sm .badge__text { line-height: 1.05; }
+.badge--sm .badge__sm { font-size: 9px; }
+.badge--sm .badge__lg { font-size: 15px; }
+
+/* On-green variant, used in the closing CTA */
+.badge--ink {
+  background: var(--green-ink);
+  border: none;
+  border-radius: 15px;
+  padding: 15px 28px;
+  gap: 12px;
+}
+.badge--ink:hover { border-color: transparent; }
+.badge--ink .badge__sm { color: #8fd6a8; font-size: 12px; }
+.badge--ink .badge__lg { font-size: 22px; }
+
+/* --------------------------------------------------------------------------
+   Phone mockup — ported from the `PhoneShot` design component
+   -------------------------------------------------------------------------- */
+.phone {
+  width: 100%;
+  aspect-ratio: 1320 / 2760;
+  border-radius: 14% / 6.8%;
+  padding: 2.6%;
+  background: linear-gradient(155deg, #3a423e, #0a0c0b 58%);
+  box-shadow: 0 40px 80px -34px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .04);
+}
+
+.phone__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 11.5% / 5.6%;
+  overflow: hidden;
+  background: var(--bg-root);
+}
+
+.phone__screen img {
+  /* Positioned so it paints above the absolutely-positioned placeholder. */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Brand
+   -------------------------------------------------------------------------- */
+
+/* logo.png is a square app icon with an opaque background, so it needs the
+   icon corner radius to sit on the page rather than read as a pasted square. */
+.brandmark {
+  display: block;
+  border-radius: 23%;
+  flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   Nav
+   -------------------------------------------------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 48px;
+  background: var(--bg-scrim);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nav__brand { display: flex; align-items: center; gap: 10px; }
+
+.wordmark {
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 23px;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+}
+
+.nav__links { display: flex; gap: 36px; }
+
+.navlink {
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 15px;
+  transition: color .14s ease;
+}
+.navlink:hover { color: var(--text-1); }
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  padding: 52px 48px 66px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hero__glow {
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 680px;
+  height: 680px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--green-glow), transparent 62%);
+  pointer-events: none;
+}
+
+.hero__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Capped so the headline never wraps out under the floating cards, which hang
+   off the phone's left edge. Matches the ~600px column in the design comp. */
+.hero__copy { flex: 1; min-width: min(440px, 100%); max-width: 620px; }
+
+.hero__title {
+  font-size: clamp(44px, 5.4vw, 76px);
+  margin: 18px 0 0;
+  color: var(--text-1);
+}
+
+.hero__sub {
+  font-size: clamp(17px, 1.5vw, 19px);
+  line-height: 1.5;
+  color: var(--text-2);
+  max-width: 500px;
+  margin: 22px 0 0;
+}
+
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.hero__proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero__proof .msr { font-size: 32px; color: var(--green-500); }
+.hero__proof p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--text-2);
+  line-height: 1.35;
+  max-width: 230px;
+}
+.hero__proof strong { color: var(--text-1); font-weight: 700; }
+
+/* The phone is the tallest thing in the hero, and its height is what pushes the
+   fold off screen. Size it against viewport height, not width, so the whole hero
+   fits on a laptop. `aspect-ratio` turns this width into ~2.09x the height. */
+.hero__device {
+  position: relative;
+  flex: none;
+  width: clamp(215px, 31vh, 320px);
+  /* Ignored where unsupported. Avoids the phone resizing as mobile browser
+     chrome collapses, which `vh` would otherwise cause. */
+  width: clamp(215px, 31svh, 320px);
+}
+
+/* Floating stat cards.
+   `right: 100%` anchors each card off the phone's left edge regardless of how
+   wide the phone has scaled, then a negative margin tucks it back over the
+   bezel. z-index clears the screenshot, which is itself positioned. */
+.floater {
+  position: absolute;
+  z-index: 3;
+  background: rgba(24, 28, 26, .92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  box-shadow: 0 24px 44px -18px rgba(0, 0, 0, .7);
+}
+
+.floater--streak {
+  top: 44px;
+  right: 100%;
+  margin-right: -20px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* Anchored to the phone's edge, so shrink-to-fit would squeeze this card and
+     wrap "day streak". Let it size to its content and grow leftward instead. */
+  white-space: nowrap;
+}
+.floater--streak .msr { font-size: 28px; color: var(--streak-orange); }
+.floater__num { font-size: 23px; font-weight: 800; color: var(--text-1); line-height: 1; }
+.floater__label { font-size: 12px; color: var(--text-2); }
+
+.floater--recovery {
+  bottom: 80px;
+  right: 100%;
+  margin-right: -28px;
+  padding: 15px 18px;
+  width: 186px;
+}
+.floater__kicker { font-size: 12px; color: var(--freeze-blue); font-weight: 700; letter-spacing: .06em; }
+.floater__score { font-size: 19px; font-weight: 800; color: var(--text-1); margin-top: 4px; }
+.floater__note { font-size: 12.5px; color: var(--text-2); margin-top: 4px; line-height: 1.35; }
+
+/* --------------------------------------------------------------------------
+   How it works
+   -------------------------------------------------------------------------- */
+.how { padding: 80px 48px; max-width: 1160px; margin: 0 auto; }
+.how__head { text-align: center; max-width: 680px; margin: 0 auto; }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.step { background: var(--bg-elevated); border-radius: 22px; padding: 32px; }
+
+.step__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--green-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step__icon .msr { font-size: 26px; color: var(--green-500); }
+
+.step__n { font-size: 13px; font-weight: 700; color: var(--text-3); margin-top: 24px; }
+.step h3 { font-size: 24px; font-weight: 750; margin: 8px 0 0; color: var(--text-1); }
+.step p { font-size: 16px; line-height: 1.5; color: var(--text-2); margin: 10px 0 0; }
+
+/* --------------------------------------------------------------------------
+   Features
+   -------------------------------------------------------------------------- */
+.features { padding: 60px 48px 40px; max-width: 1160px; margin: 0 auto; }
+.features__head { max-width: 720px; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-dim);
+  color: var(--green-500);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+.pill .msr { font-size: 16px; }
+
+.frow {
+  display: flex;
+  align-items: center;
+  gap: 72px;
+  margin-top: 80px;
+  flex-wrap: wrap;
+}
+.frow + .frow { margin-top: 110px; }
+.frow--reverse { flex-wrap: wrap-reverse; }
+
+.frow__copy { flex: 1; min-width: min(340px, 100%); }
+.frow__device { flex: none; width: 300px; }
+
+.frow h3 { font-size: clamp(30px, 4vw, 44px); margin: 22px 0 0; }
+.frow p { font-size: 18px; line-height: 1.55; color: var(--text-2); margin: 20px 0 0; }
+
+.checks {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.checks li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  color: var(--text-1);
+}
+.checks .msr { font-size: 20px; color: var(--green-500); flex: none; }
+
+/* 3-up card grid */
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 120px;
+}
+
+.tcard {
+  background: var(--bg-elevated);
+  border-radius: 24px;
+  padding: 32px 28px 0;
+  overflow: hidden;
+}
+
+.tcard__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--green-500);
+  font-size: 13px;
+  font-weight: 700;
+}
+.tcard__kicker .msr { font-size: 18px; }
+
+.tcard h3 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 14px 0 0;
+  color: var(--text-1);
+  letter-spacing: -.02em;
+}
+.tcard p { font-size: 15.5px; line-height: 1.5; color: var(--text-2); margin: 12px 0 0; }
+.tcard__device { margin: 26px -12px -2px; }
+
+/* --------------------------------------------------------------------------
+   Pricing
+   -------------------------------------------------------------------------- */
+.pricing { padding: 110px 48px; max-width: 1000px; margin: 0 auto; }
+.pricing__head { text-align: center; max-width: 640px; margin: 0 auto; }
+.pricing__head p { font-size: 18px; color: var(--text-2); margin: 18px 0 0; line-height: 1.5; }
+
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.plan { background: var(--bg-elevated); border-radius: 24px; padding: 36px; }
+.plan__name { font-size: 15px; font-weight: 700; color: var(--text-2); }
+.plan__row { display: flex; align-items: baseline; gap: 6px; margin-top: 16px; }
+.plan__price { font-size: clamp(40px, 5vw, 56px); }
+.plan__per { font-size: 17px; color: var(--text-3); }
+.plan__blurb { font-size: 15px; color: var(--text-2); margin: 14px 0 0; line-height: 1.5; }
+
+.plan__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--bg-elevated-2);
+  color: var(--text-1);
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 28px;
+  transition: background .16s ease;
+}
+.plan__cta:hover { background: var(--bg-elevated-3); }
+
+.plan--featured {
+  position: relative;
+  background: linear-gradient(160deg, #153a25, #0f2419);
+  border: 1.5px solid var(--green-500);
+}
+.plan--featured .plan__name { color: var(--green-500); }
+.plan--featured .plan__price { color: #fff; }
+.plan--featured .plan__per { color: var(--text-2); }
+.plan--featured .plan__blurb { color: #cdd6d1; }
+
+.plan__flag {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: var(--green-500);
+  color: var(--green-ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.plan__save { font-size: 14px; color: #8fd6a8; margin-top: 8px; }
+
+.plan__cta--accent { background: var(--green-500); color: var(--green-ink); font-weight: 800; }
+.plan__cta--accent:hover { background: var(--green-400); }
+
+/* --------------------------------------------------------------------------
+   FAQ
+   -------------------------------------------------------------------------- */
+.faq { padding: 40px 48px 110px; max-width: 840px; margin: 0 auto; }
+.faq__head { text-align: center; }
+.faq__list { margin-top: 44px; display: flex; flex-direction: column; gap: 12px; }
+
+.faq__item { background: var(--bg-elevated); border-radius: 18px; padding: 4px 24px; }
+.faq__item > summary { list-style: none; cursor: pointer; }
+.faq__item > summary::-webkit-details-marker { display: none; }
+
+.faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.faq-plus {
+  font-size: 24px;
+  color: var(--green-500);
+  transition: transform .2s ease;
+  flex: none;
+}
+.faq__item[open] .faq-plus { transform: rotate(45deg); }
+
+.faq__item p { font-size: 16px; line-height: 1.6; color: var(--text-2); margin: 0 0 22px; }
+
+/* --------------------------------------------------------------------------
+   Closing CTA
+   -------------------------------------------------------------------------- */
+.cta { padding: 0 48px 110px; max-width: 1160px; margin: 0 auto; }
+
+.cta__panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--green-500);
+  border-radius: 32px;
+  padding: 80px 56px;
+  text-align: center;
+}
+
+.cta__panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 120%, rgba(255, 255, 255, .28), transparent 55%);
+  pointer-events: none;
+}
+
+.cta__title { position: relative; font-size: clamp(36px, 6vw, 64px); color: var(--green-ink); margin: 0; }
+
+.cta__sub {
+  position: relative;
+  font-size: 20px;
+  color: #0a3a1c;
+  font-weight: 500;
+  margin: 20px auto 0;
+  max-width: 520px;
+}
+
+.cta .badge--ink { position: relative; margin-top: 36px; }
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: 48px;
+  max-width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.footer__brand { display: flex; flex-direction: column; gap: 12px; }
+.footer__mark { display: flex; align-items: center; gap: 9px; }
+.footer__mark .wordmark { font-size: 21px; }
+.footer__copy { font-size: 13px; color: var(--text-3); }
+.footer__links { display: flex; gap: 32px; flex-wrap: wrap; font-size: 14px; }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+/* The floating cards hang off the phone's left edge, which needs gutter to hang
+   into. Once the copy column would collide with them, stack the hero and let the
+   cards sit under the phone in normal flow. */
+@media (max-width: 1180px) {
+  .hero__inner { justify-content: center; }
+  .hero__device {
+    width: min(300px, 74vw);
+    margin: 8px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .floater { position: static; width: auto; margin-right: 0; }
+  .floater--streak { margin-top: 16px; }
+  .floater--recovery { width: auto; }
+}
+
+@media (max-width: 1080px) {
+  .hero { padding: 48px 32px 72px; }
+
+  .steps, .trio { grid-template-columns: 1fr; }
+  .frow, .frow + .frow { gap: 48px; margin-top: 72px; }
+  .how, .features, .pricing, .faq, .cta { padding-left: 32px; padding-right: 32px; }
+  .footer { padding: 40px 32px; }
+}
+
+@media (max-width: 760px) {
+  .nav { padding: 14px 20px; }
+  .nav__links { display: none; }
+
+  .hero { padding: 48px 20px 72px; }
+  .hero__device { width: min(300px, 78vw); margin: 24px auto 0; }
+  .hero__actions { gap: 18px; }
+
+  .frow__device { width: min(280px, 72vw); margin: 0 auto; }
+  .trio { margin-top: 72px; }
+  .plans { grid-template-columns: 1fr; }
+
+  .how, .features, .pricing, .faq, .cta { padding-left: 20px; padding-right: 20px; }
+  .cta__panel { padding: 56px 24px; border-radius: 24px; }
+  .cta__sub { font-size: 18px; }
+
+  .faq__q { font-size: 17px; }
+  .footer { padding: 36px 20px; justify-content: flex-start; }
+}

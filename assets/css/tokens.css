@@ -1,0 +1,48 @@
+/* Cadence — color tokens. Source of truth: app screenshots (uploads/). Green on black. */
+:root {
+  /* Base backgrounds — near-black with a faint green cast */
+  --bg-root: #0c0e0d;
+  --bg-elevated: #181c1a;      /* cards */
+  --bg-elevated-2: #232826;    /* nested tiles, inputs, chips */
+  --bg-elevated-3: #2e3431;    /* pressed / highest */
+  --bg-scrim: rgba(12, 14, 13, 0.72); /* protection / overlays */
+
+  /* Brand green */
+  --green-500: #3ddc78;        /* primary actions, active states */
+  --green-400: #5ce691;        /* hover on primary */
+  --green-600: #2fbf64;        /* pressed */
+  --green-ink: #062812;        /* text/icons ON green */
+  --green-dim: #1c3527;        /* icon tiles, subtle green fills */
+  --green-glow: rgba(61, 220, 120, 0.16);
+
+  /* Text */
+  --text-1: #f4f6f5;
+  --text-2: #a8b0ac;
+  --text-3: #6f7773;
+  --text-on-accent: var(--green-ink);
+
+  /* Semantic accents (seen in-app) */
+  --strength-purple: #a78bfa;  /* strength workout marker */
+  --streak-orange: #ff8a3d;    /* streak flame, bronze ring */
+  --bronze: #c9803f;
+  --gold: #f5c644;             /* crown / longest */
+  --freeze-blue: #8fd6f7;      /* streak freezes */
+  --base-blue: #9db8e8;        /* "Base" week badge text */
+  --base-blue-bg: #2b3a52;     /* "Base" week badge fill */
+  --danger: #f47069;
+
+  /* Lines */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Semantic aliases */
+  --surface-page: var(--bg-root);
+  --surface-card: var(--bg-elevated);
+  --surface-inset: var(--bg-elevated-2);
+  --accent: var(--green-500);
+  --accent-hover: var(--green-400);
+  --accent-pressed: var(--green-600);
+  --text-body: var(--text-1);
+  --text-muted: var(--text-2);
+  --text-faint: var(--text-3);
+}
