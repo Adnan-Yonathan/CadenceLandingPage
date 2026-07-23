@@ -1,396 +1,301 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cadence — The running coach that keeps you accountable</title>
-  <meta name="description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run. Cadence keeps you consistent and coaches you to get faster.">
-  <meta name="theme-color" content="#0c0e0d">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadence: The running coach that keeps you accountable</title>
+<meta name="description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run. Cadence keeps you consistent and coaches you to get faster.">
+<meta name="theme-color" content="#0d1c12">
 
-  <!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
-  <meta name="apple-itunes-app" content="app-id=6783027833">
+<!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
+<meta name="apple-itunes-app" content="app-id=6783027833">
 
-  <script>
-    // iOS visitors go straight to the App Store listing.
-    // Runs before render so there is no flash of the page first.
-    (function () {
-      var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
+<script>
+  // Routing, before render so there is no flash of the wrong page first:
+  //   1. iOS visitors go straight to the App Store listing.
+  //   2. Other phone-sized touch screens get the dedicated mobile landing page.
+  //   3. Everyone else stays on this desktop page.
+  (function () {
+    var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
 
-      var ua = navigator.userAgent || '';
-      var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-        // iPadOS 13+ reports itself as a Mac; touch points give it away.
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!isIOS) return;
+    var params;
+    try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
+    // ?stay opens the real page on a phone (QA, sharing a section link);
+    // ?desktop forces the desktop layout on a phone.
+    var stay = !!(params && params.has('stay'));
 
-      // ?stay lets us open the real page on a phone (QA, sharing a section link).
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      // iPadOS 13+ reports itself as a Mac; touch points give it away.
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    // 1) iOS → App Store, once per tab (returning/back shouldn't bounce out again).
+    if (isIOS && !stay) {
+      var sent = false;
       try {
-        if (new URLSearchParams(location.search).has('stay')) return;
-      } catch (e) { /* no URLSearchParams: fall through and redirect */ }
-
-      // Redirect once per tab. Without this, returning from the App Store —
-      // or tapping back — bounces the visitor straight out again.
-      try {
-        if (sessionStorage.getItem('cadence:sentToAppStore')) return;
-        sessionStorage.setItem('cadence:sentToAppStore', '1');
+        sent = !!sessionStorage.getItem('cadence:sentToAppStore');
+        if (!sent) sessionStorage.setItem('cadence:sentToAppStore', '1');
       } catch (e) { /* private mode: storage throws, redirect anyway */ }
+      if (!sent) { location.replace(APP_STORE); return; }
+    }
 
-      location.replace(APP_STORE);
-    })();
-  </script>
+    // 2) Phone-sized touch screens → mobile landing page (keep any ?stay/query).
+    if (params && params.has('desktop')) return;
+    var w = Math.min(window.innerWidth || 9999, (window.screen && window.screen.width) || 9999);
+    var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (w <= 760 && isTouch) {
+      location.replace('landing-mobile.html' + location.search);
+    }
+  })();
+</script>
 
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Cadence — The running coach that keeps you accountable">
-  <meta property="og:description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run.">
-  <meta property="og:image" content="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cadence — The running coach that keeps you accountable">
+<meta property="og:description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run.">
+<meta property="og:image" content="images/logo.png">
 
-  <link rel="icon" href="images/logo.png" type="image/png">
-  <link rel="apple-touch-icon" href="images/logo.png">
+<link rel="icon" href="images/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="images/logo.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Nunito:wght@800;900&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--green:#a3d13a;--dark:#0d1c12;--ink:#0e1c12;--cream:#f1f0e4;--muted:#9db29c}
+  html{scroll-behavior:smooth}
+  body{font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--dark);color:var(--cream)}
+  a{text-decoration:none;color:inherit}
+  img{display:block;max-width:100%}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  .lime{color:var(--green)}
 
-  <link rel="stylesheet" href="assets/css/tokens.css">
-  <link rel="stylesheet" href="assets/css/styles.css">
+  /* store button */
+  .store{display:inline-flex;align-items:center;gap:12px;background:var(--cream);color:var(--ink);border-radius:14px;padding:13px 22px;width:max-content;transition:transform .15s,box-shadow .15s}
+  .store:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px rgba(163,209,58,.5)}
+  .store .sm{font-size:11px;font-weight:600;line-height:1}
+  .store .lg{font-size:19px;font-weight:800;line-height:1.1;margin-top:2px}
+  .store.ghost{background:transparent;color:var(--cream);border:1.5px solid #2f4a24}
+  /* app store badge — black pill, no white surround */
+  .badge{display:inline-block;transition:transform .15s,filter .15s}
+  .badge:hover{transform:translateY(-2px);filter:drop-shadow(0 12px 26px rgba(163,209,58,.45))}
+  .badge img{height:56px;width:auto;display:block}
+  .nav-badge img{height:42px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(13,28,18,.82);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06)}
+  nav .wrap{height:76px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px;color:var(--cream)}
+  .brand .ic{width:38px;height:38px;border-radius:11px;overflow:hidden;box-shadow:0 0 30px -8px rgba(163,209,58,.5)}
+  .navlinks{display:flex;gap:34px;align-items:center;font-size:16px;font-weight:600;color:var(--muted)}
+  .navlinks a:hover{color:var(--cream)}
+  @media(max-width:820px){.navlinks{display:none}}
+
+  /* hero — dark brand, two angled phones (ERLY format) */
+  .hero{position:relative;overflow:hidden;background:radial-gradient(120% 75% at 50% -10%,#41551f 0%,#22381b 38%,#0d1c12 72%,#081209 100%)}
+  .hero .wrap{padding-top:56px;padding-bottom:70px;display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;min-height:660px}
+  .hero-copy .ratepill{display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);border-radius:9999px;padding:7px 18px 7px 8px;margin-bottom:30px}
+  .ratepill .avs{display:flex}
+  .ratepill .avs img{width:30px;height:30px;border-radius:50%;border:2px solid #14251a;margin-right:-10px;object-fit:cover;background:#14251a}
+  .ratepill .txt{font-size:15px;font-weight:700;color:var(--cream)}
+  .hero-copy h1{font-size:74px;font-weight:800;letter-spacing:-.035em;line-height:.95;color:var(--cream)}
+  .hero-copy h1 .lime{color:var(--green)}
+  .hero-copy .sub{font-size:20px;color:var(--muted);line-height:1.5;margin:24px 0 32px;max-width:460px}
+  .hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .hero-stage{position:relative;height:640px}
+  .hero-stage .ph{position:absolute;border-radius:44px;background:#0a0a0b;padding:9px;box-shadow:0 0 0 2px #26331d,0 40px 90px -28px rgba(0,0,0,.9),0 0 120px -34px rgba(163,209,58,.4)}
+  .hero-stage .ph .scr{border-radius:36px;overflow:hidden;background:#000;aspect-ratio:1206/2622}
+  .hero-stage .ph .scr img{width:100%;height:100%;object-fit:cover;object-position:top}
+  .hero-stage .ph.p1{width:280px;left:2%;top:70px;transform:rotate(-8deg);z-index:2}
+  .hero-stage .ph.p2{width:280px;right:0;top:0;transform:rotate(7deg);z-index:1}
+  @media(max-width:900px){
+    .hero .wrap{grid-template-columns:1fr;text-align:center;padding-top:40px;padding-bottom:40px;gap:20px;min-height:0}
+    .hero-copy h1{font-size:48px}
+    .hero-copy .sub{margin-left:auto;margin-right:auto;font-size:17px}
+    .hero-actions{justify-content:center}
+    .hero-copy .ratepill{margin-left:auto;margin-right:auto}
+    .hero-stage{height:440px;max-width:420px;margin:0 auto;width:100%}
+    .hero-stage .ph.p1{width:210px;left:6%;top:60px}
+    .hero-stage .ph.p2{width:210px;right:6%;top:0}
+  }
+
+  /* logos strip */
+  .locks{border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);background:#0a140c}
+  .locks .wrap{padding:24px;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;color:#6f8570;font-size:14px;font-weight:600}
+  .locks .lbl{color:#6f8570}
+  .locks .logos{display:flex;align-items:center;gap:22px}
+  .locks .logos svg{height:26px;width:auto;display:block;opacity:.92}
+
+  /* SCROLL FEATURE SECTION */
+  .showcase{padding:90px 0 40px}
+  .showcase h2.section{font-size:15px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--green);text-align:center;margin-bottom:10px}
+  .showcase p.section{font-size:34px;font-weight:800;letter-spacing:-.02em;text-align:center;margin-bottom:50px;line-height:1.1}
+  .scroller{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  .stage{position:sticky;top:80px;height:calc(100vh - 120px);display:flex;align-items:center;justify-content:center}
+  .stage .phone{position:relative;width:320px;border-radius:46px;background:#0a0a0b;padding:11px;box-shadow:0 0 0 2px #26331d,0 50px 100px -30px rgba(0,0,0,.9),0 0 130px -34px rgba(163,209,58,.4)}
+  .stage .scr{position:relative;border-radius:36px;overflow:hidden;background:#000;aspect-ratio:1206/2622}
+  .stage .scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.04);transition:opacity .5s ease,transform .6s ease}
+  .stage .scr img.on{opacity:1;transform:scale(1)}
+  .panels{display:flex;flex-direction:column}
+  .panel{min-height:88vh;display:flex;flex-direction:column;justify-content:center;gap:16px}
+  .panel .idx{font-size:14px;font-weight:800;letter-spacing:.1em;color:#5f8a24}
+  .panel h3{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.02}
+  .panel p{font-size:18px;color:var(--muted);line-height:1.6;max-width:420px}
+  .panel .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .panel .chip{font-size:13px;font-weight:600;color:#cfe89a;background:rgba(163,209,58,.1);border:1px solid rgba(163,209,58,.25);border-radius:9999px;padding:6px 14px}
+
+  @media(max-width:820px){
+    .showcase{padding:60px 0 20px}
+    .showcase p.section{font-size:26px;margin-bottom:20px}
+    .scroller{grid-template-columns:1fr;gap:0}
+    .stage{top:64px;height:56vh}
+    .stage .phone{width:200px}
+    .panels{margin-top:10px}
+    .panel{min-height:64vh;text-align:center;align-items:center}
+    .panel h3{font-size:28px}
+    .panel p{font-size:15px}
+    .panel .chips{justify-content:center}
+  }
+
+  /* value cards (desktop-friendly) */
+  .values{padding:70px 0}
+  .values .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .vcard{background:#12210b;border:1px solid #24371b;border-radius:22px;padding:28px}
+  .vcard .em{width:46px;height:46px;border-radius:13px;background:rgba(163,209,58,.13);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .vcard h4{font-size:20px;font-weight:700;margin-bottom:8px}
+  .vcard p{font-size:15px;color:var(--muted);line-height:1.55}
+  @media(max-width:820px){.values .grid{grid-template-columns:1fr}}
+
+  /* testimonial */
+  .quotes{padding:40px 0 80px}
+  .quotes .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .q{background:radial-gradient(120% 100% at 0 0,#233a17,#12210b);border:1px solid #24371b;border-radius:22px;padding:26px}
+  .q .st{display:inline-flex;gap:2px;margin-bottom:12px}
+  .q .st svg{width:15px;height:15px}
+  .q p{font-size:15px;color:#dbe6d5;line-height:1.55;margin-bottom:14px}
+  .q .who{display:flex;align-items:center;gap:10px}
+  .q .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#a3d13a,#5f8a24)}
+  .q .who b{font-size:13px;display:block}
+  .q .who span{font-size:12px;color:#7c927c}
+  @media(max-width:820px){.quotes .grid{grid-template-columns:1fr}}
+
+  /* big CTA */
+  .cta{position:relative;overflow:hidden;background:radial-gradient(100% 120% at 50% 0,#2a4419,#0d1c12);border-top:1px solid rgba(255,255,255,.06)}
+  .cta .wrap{padding:90px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+  .cta .ic{width:84px;height:84px;border-radius:22px;overflow:hidden;box-shadow:0 20px 50px -14px rgba(0,0,0,.6),0 0 90px -18px rgba(163,209,58,.6)}
+  .cta h2{font-size:54px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .cta .sub{font-size:18px;color:var(--muted)}
+  @media(max-width:820px){.cta h2{font-size:36px}.cta .wrap{padding:64px 24px}}
+
+  /* footer */
+  footer{background:#0a140c;border-top:1px solid rgba(255,255,255,.06)}
+  footer .wrap{padding:40px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;color:#6f8570;font-size:13px}
+  footer .brand{font-size:17px;color:var(--cream)}
+  footer .fl{display:flex;gap:22px;flex-wrap:wrap}
+  footer .fl a:hover{color:var(--cream)}
+</style>
 </head>
 <body>
 
-<!-- Icon sprite: the Apple glyph appears in every App Store badge. -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <symbol id="i-apple" viewBox="0 0 384 512">
-    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
-  </symbol>
-</svg>
-
-<!-- ============================== NAV ============================== -->
-<nav class="nav">
-  <a class="nav__brand" href="#" aria-label="Cadence home">
-    <img class="brandmark" src="images/logo.png" alt="" width="32" height="32">
-    <span class="wordmark">Cadence</span>
-  </a>
-
-  <div class="nav__links">
-    <a class="navlink" href="#features">Features</a>
-    <a class="navlink" href="#how">How it works</a>
-    <a class="navlink" href="#pricing">Pricing</a>
-    <a class="navlink" href="#faq">FAQ</a>
+<!-- NAV -->
+<nav><div class="wrap">
+  <a class="brand" href="#top"><span class="ic"><img src="images/app-icon.png" alt="Cadence"></span>Cadence</a>
+  <div class="navlinks">
+    <a href="#features">Features</a>
+    <a href="#download">Download</a>
+    <a href="mailto:cadencerunningsupport@gmail.com">Contact</a>
   </div>
+  <a class="badge nav-badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener"><img src="images/app-store-badge.png" alt="Download on the App Store"></a>
+</div></nav>
 
-  <a class="badge badge--sm" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
-    <svg class="badge__icon" width="17" height="21" aria-hidden="true"><use href="#i-apple"></use></svg>
-    <span class="badge__text">
-      <span class="badge__sm">Download on the</span>
-      <span class="badge__lg">App Store</span>
-    </span>
-  </a>
-</nav>
-
-<!-- ============================== HERO ============================== -->
-<header class="hero">
-  <div class="hero__glow" aria-hidden="true"></div>
-
-  <div class="hero__inner">
-    <div class="hero__copy">
-      <div class="eyebrow">YOUR RUNNING ACCOUNTABILITY COACH</div>
-      <h1 class="disp hero__title" data-reveal>Run first. Scroll later.</h1>
-      <p class="hero__sub" data-reveal>Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run. Cadence turns your phone into the push you need to stay consistent — and the coach you need to get faster.</p>
-
-      <div class="hero__actions" data-reveal>
-        <a class="badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
-          <svg class="badge__icon" width="24" height="29" aria-hidden="true"><use href="#i-apple"></use></svg>
-          <span class="badge__text">
-            <span class="badge__sm">Download on the</span>
-            <span class="badge__lg">App Store</span>
-          </span>
-        </a>
-
-        <div class="hero__proof">
-          <span class="msr" aria-hidden="true">school</span>
-          <p><strong>Accountability and adaptive coaching</strong>, built by collegiate runners.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="hero__device">
-      <div class="phone">
-        <div class="phone__screen">
-          <img src="images/recovery.png" alt="Cadence recovery check-in screen showing a readiness score">
-        </div>
-      </div>
-
-      <div class="floater floater--streak">
-        <span class="msr" aria-hidden="true">local_fire_department</span>
-        <div>
-          <div class="floater__num">14</div>
-          <div class="floater__label">day streak</div>
-        </div>
-      </div>
-
-      <div class="floater floater--recovery">
-        <div class="floater__kicker">RECOVERY SAYS</div>
-        <div class="floater__score">Steady — 65</div>
-        <div class="floater__note">Trim today's effort by ~25% and keep it controlled.</div>
-      </div>
+<!-- HERO -->
+<header class="hero" id="top"><div class="wrap">
+  <div class="hero-copy">
+    <div class="ratepill"><span class="avs"><img src="images/avatars/a1.jpg" alt=""><img src="images/avatars/a2.jpg" alt=""><img src="images/avatars/a3.jpg" alt=""></span><span class="txt">Built by college runners for everyone</span></div>
+    <h1>Stop scrolling.<br><span class="lime">Start running.</span></h1>
+    <p class="sub">Cadence is the alarm that locks your favorite apps until you get up and run. Real accountability, a plan that adapts, and a coach in your pocket.</p>
+    <div class="hero-actions">
+      <a class="badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener"><img src="images/app-store-badge.png" alt="Download on the App Store"></a>
+      <a class="store ghost" href="#features">See how it works</a>
     </div>
   </div>
-</header>
-
-<!-- ========================== HOW IT WORKS ========================== -->
-<section id="how" class="how">
-  <div class="how__head" data-reveal>
-    <div class="eyebrow">HOW IT WORKS</div>
-    <h2 class="disp section-title">Your run starts before excuses do.</h2>
+  <div class="hero-stage">
+    <div class="ph p1"><div class="scr"><img src="images/screen-app-lock.png" alt="Cadence app lock"></div></div>
+    <div class="ph p2"><div class="scr"><img src="images/screen-do-not-stop.png" alt="Do not stop"></div></div>
   </div>
+</div></header>
 
-  <div class="steps">
-    <div class="step" data-reveal>
-      <div class="step__icon"><span class="msr" aria-hidden="true">alarm</span></div>
-      <div class="step__n">STEP 1</div>
-      <h3>Set your run alarm</h3>
-      <p>Choose when you’ll run and which distracting apps Cadence should hold until the work is done.</p>
+<div class="locks"><div class="wrap">
+  <span class="lbl">Locks the apps that derail your day</span>
+  <span class="logos">
+    <svg viewBox="0 0 24 24" aria-label="Instagram"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="url(#ig)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.4" cy="7.6" r="1.1" fill="#fff"/></svg>
+    <svg viewBox="0 0 24 24" aria-label="TikTok"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.4c0 3.2-2.4 5.4-5.3 5.4-2.7 0-4.8-2-4.8-4.7 0-2.9 2.4-4.8 5.4-4.5v2.6c-.4-.1-.8-.2-1.2-.1-1.1.1-1.9.9-1.8 2.1 0 1.1.9 1.9 2 1.9 1.2 0 2.1-.9 2.1-2.3V3h3.7z" fill="#fff"/></svg>
+    <svg viewBox="0 0 24 24" aria-label="YouTube"><rect x="1" y="5" width="22" height="14" rx="4.5" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5z" fill="#fff"/></svg>
+  </span>
+</div></div>
+
+<!-- SCROLL FEATURE SHOWCASE -->
+<section class="showcase" id="features"><div class="wrap">
+  <h2 class="section">How it works</h2>
+  <p class="section">One app, every excuse handled.</p>
+  <div class="scroller">
+    <div class="stage">
+      <div class="phone"><div class="scr" id="stageScr">
+        <img data-i="0" class="on" src="images/screen-app-lock.png" alt="App lock">
+        <img data-i="1" src="images/screen-do-not-stop.png" alt="Do not stop">
+        <img data-i="2" src="images/screen-training-plan.png" alt="Training plan">
+        <img data-i="3" src="images/screen-ai-coach.png" alt="AI coach">
+        <img data-i="4" src="images/screen-race-shape.png" alt="Race shape">
+      </div></div>
     </div>
-
-    <div class="step" data-reveal>
-      <div class="step__icon"><span class="msr" aria-hidden="true">photo_camera</span></div>
-      <div class="step__n">STEP 2</div>
-      <h3>Prove you laced up</h3>
-      <p>When the alarm goes off, show Cadence you’re ready. One quick check turns intention into action.</p>
-    </div>
-
-    <div class="step" data-reveal>
-      <div class="step__icon"><span class="msr" aria-hidden="true">directions_run</span></div>
-      <div class="step__n">STEP 3</div>
-      <h3>Earn your apps back</h3>
-      <p>Complete a verified outdoor run to unlock your apps. No willpower games — just real miles.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================ FEATURES ============================ -->
-<section id="features" class="features">
-  <div class="features__head" data-reveal>
-    <div class="eyebrow">FEATURES</div>
-    <h2 class="disp section-title">Accountability gets you out. Coaching moves you forward.</h2>
-  </div>
-
-  <!-- Adaptive plan -->
-  <div class="frow" data-reveal>
-    <div class="frow__copy">
-      <div class="pill"><span class="msr" aria-hidden="true">calendar_month</span> ADAPTIVE PLAN</div>
-      <h3 class="disp">A plan built around the runner you are today.</h3>
-      <p>Cadence builds your training around your goal, then adapts as your fitness, recovery, and life change. You always know what to run next — and why it matters.</p>
-      <ul class="checks">
-        <li><span class="msr" aria-hidden="true">check_circle</span> Adaptive training for your goal and fitness</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Recovery-aware distance and pace adjustments</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Clear weekly progression, not random workouts</li>
-      </ul>
-    </div>
-    <div class="frow__device">
-      <div class="phone">
-        <div class="phone__screen">
-          <img src="images/plan.png" alt="Cadence training plan screen showing the week's sessions">
-        </div>
-      </div>
+    <div class="panels">
+      <div class="panel" data-i="0"><div class="idx">01</div><h3>Your apps unlock after your run</h3><p>Set the alarm. When it goes off, your distracting apps stay locked until you complete a qualifying run. No run, no scroll.</p></div>
+      <div class="panel" data-i="1"><div class="idx">02</div><h3>No stopping until it's done</h3><p>The timer only counts while you're actually moving. There are no shortcuts and no fake runs to cheat your way back in.</p></div>
+      <div class="panel" data-i="2"><div class="idx">03</div><h3>A plan that adapts to you</h3><p>Daily runs and strength work adjust automatically around your goal race, your schedule, and how you're recovering.</p></div>
+      <div class="panel" data-i="3"><div class="idx">04</div><h3>Coaching that actually coaches</h3><p>Get personalized guidance on form, pacing, fueling and recovery every week, tuned to your progress.</p></div>
+      <div class="panel" data-i="4"><div class="idx">05</div><h3>Watch your race times drop</h3><p>Cadence re-estimates your fitness after every single run, so you can see your predicted race times improve over time.</p></div>
     </div>
   </div>
+</div></section>
 
-  <!-- Recovery check-in (image first) -->
-  <div class="frow frow--reverse" data-reveal>
-    <div class="frow__device">
-      <div class="phone">
-        <div class="phone__screen">
-          <img src="images/recovery.png" alt="Cadence morning check-in screen for sleep and body feel">
-        </div>
-      </div>
-    </div>
-    <div class="frow__copy">
-      <div class="pill"><span class="msr" aria-hidden="true">bed</span> RECOVERY CHECK-IN</div>
-      <h3 class="disp">Train hard when you’re ready. Recover when you’re not.</h3>
-      <p>A quick check-in turns your sleep, energy, soreness, and stress into a readiness score. Cadence uses it to keep today’s run productive without pushing past what your body can handle.</p>
-      <ul class="checks">
-        <li><span class="msr" aria-hidden="true">check_circle</span> Readiness score from sleep &amp; body feel</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Flag pain or niggles before they grow</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Auto-fills from Apple Health</li>
-      </ul>
-    </div>
+<!-- VALUE CARDS -->
+<section class="values"><div class="wrap">
+  <div class="grid">
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0"/></svg></div><h4>Beat the morning scroll</h4><p>Replace the reflexive reach for your phone with a habit that actually moves you.</p></div>
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div><h4>Build a real streak</h4><p>Rank up and keep your streak alive as consistency compounds run after run.</p></div>
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><h4>Free for 3 days</h4><p>Try everything with no commitment. Cancel anytime before the trial ends.</p></div>
   </div>
+</div></section>
 
-  <!-- Coach -->
-  <div class="frow" data-reveal>
-    <div class="frow__copy">
-      <div class="pill"><span class="msr" aria-hidden="true">forum</span> YOUR COACH</div>
-      <h3 class="disp">Answers that keep your training on track.</h3>
-      <p>Ask Cadence about pacing, soreness, fueling, hydration, race prep, or recovery and get practical guidance built for runners — whenever you need it.</p>
-      <ul class="checks">
-        <li><span class="msr" aria-hidden="true">check_circle</span> Ask your coach any training question</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Fueling, hydration &amp; recovery playbook</li>
-        <li><span class="msr" aria-hidden="true">check_circle</span> Listen on the go with audio guides</li>
-      </ul>
-    </div>
-    <div class="frow__device">
-      <div class="phone">
-        <div class="phone__screen">
-          <img src="images/coach.png" alt="Cadence coach chat screen answering a training question">
-        </div>
-      </div>
-    </div>
+<!-- BIG CTA -->
+<section class="cta" id="download"><div class="wrap">
+  <div class="ic"><img src="images/app-icon.png" alt="Cadence"></div>
+  <h2>Stop scrolling.<br><span class="lime">Start running.</span></h2>
+  <p class="sub">Try Cadence free for 3 days.</p>
+  <a class="badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener"><img src="images/app-store-badge.png" alt="Download on the App Store"></a>
+</div></section>
+
+<!-- FOOTER -->
+<footer><div class="wrap">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;font-weight:800"><span style="width:28px;height:28px;border-radius:8px;overflow:hidden;display:inline-block"><img src="images/app-icon.png" alt=""></span>Cadence</div>
+  <div class="fl">
+    <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">App Store</a>
+    <a href="#features">Features</a>
+    <a href="https://adnan-yonathan.github.io/CadenceLegal/privacy-policy">Privacy</a>
+    <a href="https://adnan-yonathan.github.io/CadenceLegal/terms-of-use">Terms</a>
   </div>
+  <div>© 2026 Cadence. For educational and fitness use.</div>
+</div></footer>
 
-  <!-- 3-up grid -->
-  <div class="trio">
-    <div class="tcard" data-reveal>
-      <div class="tcard__kicker"><span class="msr" aria-hidden="true">sports_score</span> RACE PREDICTIONS</div>
-      <h3>Know what you’re capable of.</h3>
-      <p>See predicted race times as your fitness grows, then test yourself against a target pace, a friend, or a faster version of you.</p>
-      <div class="tcard__device">
-        <div class="phone">
-          <div class="phone__screen">
-            <img src="images/ghost.png" alt="Cadence ghost race screen showing pace against a competitor">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tcard" data-reveal>
-      <div class="tcard__kicker"><span class="msr" aria-hidden="true">map</span> EXPLORE ROUTES</div>
-      <h3>Take the guesswork out of where to run.</h3>
-      <p>Find loops and trails that match your target distance, or draw your own. See the surface and difficulty before you head out.</p>
-      <div class="tcard__device">
-        <div class="phone">
-          <div class="phone__screen">
-            <img src="images/explore.png" alt="Cadence explore screen showing nearby running routes on a map">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tcard" data-reveal>
-      <div class="tcard__kicker"><span class="msr" aria-hidden="true">military_tech</span> STREAKS &amp; RANKS</div>
-      <h3>Watch consistency turn into progress.</h3>
-      <p>Build streaks, climb progress ranks, set personal records, and earn medals. Every completed run moves you forward.</p>
-      <div class="tcard__device">
-        <div class="phone">
-          <div class="phone__screen">
-            <img src="images/profile.png" alt="Cadence profile screen showing streaks, ranks and medals">
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================= PRICING ============================= -->
-<section id="pricing" class="pricing">
-  <div class="pricing__head" data-reveal>
-    <div class="eyebrow">PRICING</div>
-    <h2 class="disp section-title">Start running. Stay consistent.</h2>
-    <p>Try Cadence Pro free for 3 days on the annual plan. Your accountability coach starts now.</p>
-  </div>
-
-  <div class="plans">
-    <div class="plan" data-reveal>
-      <div class="plan__name">Weekly</div>
-      <div class="plan__row">
-        <span class="disp plan__price">$9.99</span>
-        <span class="plan__per">/week</span>
-      </div>
-      <p class="plan__blurb">Full accountability and coaching with week-to-week flexibility.</p>
-      <a class="plan__cta" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">Choose weekly</a>
-    </div>
-
-    <div class="plan plan--featured" data-reveal>
-      <div class="plan__flag">BEST VALUE</div>
-      <div class="plan__name">Annual</div>
-      <div class="plan__row">
-        <span class="disp plan__price">$59.99</span>
-        <span class="plan__per">/year</span>
-      </div>
-      <div class="plan__save">Just $1.15/week · save 88%</div>
-      <p class="plan__blurb">A full year of accountability, adaptive training, and coaching.</p>
-      <a class="plan__cta plan__cta--accent" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">Start 3-day free trial</a>
-    </div>
-  </div>
-</section>
-
-<!-- =============================== FAQ =============================== -->
-<section id="faq" class="faq">
-  <div class="faq__head" data-reveal>
-    <div class="eyebrow">FAQ</div>
-    <h2 class="disp section-title">Good questions.</h2>
-  </div>
-
-  <div class="faq__list" data-reveal>
-    <details class="faq__item">
-      <summary>
-        <div class="faq__q">How does Cadence keep me accountable?<span class="faq-plus msr" aria-hidden="true">add</span></div>
-      </summary>
-      <p>You set a run alarm and choose the apps you want held. When it’s time to run, Cadence asks you to prove you laced up, then verifies that you completed a real outdoor run before giving your apps back.</p>
-    </details>
-
-    <details class="faq__item">
-      <summary>
-        <div class="faq__q">How does Cadence verify my run?<span class="faq-plus msr" aria-hidden="true">add</span></div>
-      </summary>
-      <p>Cadence uses your iPhone to track a real outdoor run. You don’t need a watch or extra gear — just your phone and your running shoes.</p>
-    </details>
-
-    <details class="faq__item">
-      <summary>
-        <div class="faq__q">Is it for beginners or serious runners?<span class="faq-plus msr" aria-hidden="true">add</span></div>
-      </summary>
-      <p>Both. Whether you’re building your first running habit or chasing a new PR, Cadence adjusts the plan, accountability, and coaching to your level and goal.</p>
-    </details>
-
-    <details class="faq__item">
-      <summary>
-        <div class="faq__q">How does the free trial work?<span class="faq-plus msr" aria-hidden="true">add</span></div>
-      </summary>
-      <p>The annual plan starts with a 3-day free trial. You won't be charged until it ends, and you can cancel anytime from the App Store before then.</p>
-    </details>
-
-    <details class="faq__item">
-      <summary>
-        <div class="faq__q">What else is included with Cadence?<span class="faq-plus msr" aria-hidden="true">add</span></div>
-      </summary>
-      <p>You get adaptive training plans, recovery check-ins, on-demand coaching, race-time predictions, routes, progress ranks, streaks, personal records, medals, and more.</p>
-    </details>
-  </div>
-</section>
-
-<!-- ============================ FINAL CTA ============================ -->
-<section class="cta">
-  <div class="cta__panel" data-reveal>
-    <h2 class="disp cta__title">Make skipping harder than running.</h2>
-    <p class="cta__sub">Set your first run alarm, earn your apps back, and start building the consistency that makes you faster.</p>
-    <a class="badge badge--ink" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
-      <svg class="badge__icon" width="26" height="31" aria-hidden="true"><use href="#i-apple"></use></svg>
-      <span class="badge__text">
-        <span class="badge__sm">Download on the</span>
-        <span class="badge__lg">App Store</span>
-      </span>
-    </a>
-  </div>
-</section>
-
-<!-- ============================== FOOTER ============================== -->
-<footer class="footer">
-  <div class="footer__brand">
-    <div class="footer__mark">
-      <img class="brandmark" src="images/logo.png" alt="" width="30" height="30">
-      <span class="wordmark">Cadence</span>
-    </div>
-    <div class="footer__copy">© 2026 Cadence. Run first. Scroll later.</div>
-  </div>
-
-  <div class="footer__links">
-    <a class="navlink" href="#features">Features</a>
-    <a class="navlink" href="#pricing">Pricing</a>
-    <a class="navlink" href="#faq">FAQ</a>
-    <a class="navlink" href="https://adnan-yonathan.github.io/CadenceLegal/privacy-policy">Privacy</a>
-    <a class="navlink" href="https://adnan-yonathan.github.io/CadenceLegal/terms-of-use">Terms</a>
-  </div>
-</footer>
-
+<script>
+  // scroll-driven screen swap
+  const imgs = [...document.querySelectorAll('#stageScr img')];
+  const panels = [...document.querySelectorAll('.panel')];
+  function setActive(i){imgs.forEach(im=>im.classList.toggle('on', +im.dataset.i===i))}
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) setActive(+e.target.dataset.i); });
+  }, {rootMargin:'-45% 0px -45% 0px', threshold:0});
+  panels.forEach(p=>io.observe(p));
+</script>
 </body>
 </html>

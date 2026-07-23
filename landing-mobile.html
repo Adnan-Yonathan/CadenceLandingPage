@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cadence — The running coach that keeps you accountable</title>
+<meta name="description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run. Cadence keeps you consistent and coaches you to get faster.">
+<meta name="theme-color" content="#0d1c12">
+
+<!-- Canonical points to the root so SEO consolidates the desktop + mobile pages. -->
+<link rel="canonical" href="https://cadencerun.app/">
+
+<!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
+<meta name="apple-itunes-app" content="app-id=6783027833">
+
+<script>
+  // iOS visitors go straight to the App Store listing.
+  // Runs before render so there is no flash of the page first.
+  (function () {
+    var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
+
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      // iPadOS 13+ reports itself as a Mac; touch points give it away.
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    // ?stay lets us open the real page on a phone (QA, sharing a section link).
+    try {
+      if (new URLSearchParams(location.search).has('stay')) return;
+    } catch (e) { /* no URLSearchParams: fall through and redirect */ }
+
+    // Redirect once per tab. Without this, returning from the App Store —
+    // or tapping back — bounces the visitor straight out again.
+    try {
+      if (sessionStorage.getItem('cadence:sentToAppStore')) return;
+      sessionStorage.setItem('cadence:sentToAppStore', '1');
+    } catch (e) { /* private mode: storage throws, redirect anyway */ }
+
+    location.replace(APP_STORE);
+  })();
+</script>
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cadence — The running coach that keeps you accountable">
+<meta property="og:description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run.">
+<meta property="og:image" content="images/logo.png">
+
+<link rel="icon" href="images/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="images/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--green:#a3d13a;--dark:#0d1c12;--ink:#0e1c12;--cream:#f1f0e4;--muted:#9db29c;--card:#12210b;--line:#24371b}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--dark);color:var(--cream);overflow-x:hidden}
+  a{text-decoration:none;color:inherit}
+  img{display:block;max-width:100%}
+  .lime{color:var(--green)}
+  .wrap{width:100%;max-width:440px;margin:0 auto;padding:0 20px}
+
+  /* app store badge — black pill */
+  .badge{display:inline-block;transition:transform .15s,filter .15s}
+  .badge:active{transform:scale(.97)}
+  .badge img{height:52px;width:auto;display:block}
+  .ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--cream);border:1.5px solid #2f4a24;border-radius:14px;padding:15px 22px;font-size:15px;font-weight:700}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(13,28,18,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06)}
+  nav .wrap{height:60px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--cream)}
+  .brand .ic{width:32px;height:32px;border-radius:9px;overflow:hidden;box-shadow:0 0 24px -8px rgba(163,209,58,.5)}
+  .nav-cta{font-size:13px;font-weight:800;color:var(--dark);background:var(--green);border-radius:9999px;padding:9px 16px}
+
+  /* social proof pill (top of hero) */
+  .ratepill{display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);border-radius:9999px;padding:7px 18px 7px 8px;margin-bottom:22px}
+  .ratepill .avs{display:flex}
+  .ratepill .avs img{width:30px;height:30px;border-radius:50%;border:2px solid #14251a;margin-right:-10px;object-fit:cover;background:#14251a}
+  .ratepill .txt{font-size:15px;font-weight:700;color:var(--cream)}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;background:radial-gradient(130% 60% at 50% -6%,#41551f 0%,#22381b 40%,#0d1c12 78%,#081209 100%)}
+  .hero .wrap{padding:26px 20px 0;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .hero h1{font-size:46px;font-weight:800;letter-spacing:-.035em;line-height:.94}
+  .hero .sub{font-size:16px;color:var(--muted);line-height:1.45;margin:14px auto 20px;max-width:340px}
+  .hero .actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;align-items:center}
+  .hero-stage{position:relative;width:100%;height:340px;margin-top:14px}
+  .hero-stage .ph{position:absolute;border-radius:38px;background:#0a0a0b;padding:8px;box-shadow:0 0 0 2px #26331d,0 34px 70px -26px rgba(0,0,0,.9),0 0 100px -30px rgba(163,209,58,.4)}
+  .hero-stage .ph .scr{border-radius:31px;overflow:hidden;background:#000;aspect-ratio:1206/2622}
+  .hero-stage .ph .scr img{width:100%;height:100%;object-fit:cover;object-position:top}
+  .hero-stage .ph.p1{width:190px;left:50%;margin-left:-138px;top:22px;transform:rotate(-8deg);z-index:2}
+  .hero-stage .ph.p2{width:190px;left:50%;margin-left:-52px;top:0;transform:rotate(7deg);z-index:1}
+
+  /* locks strip */
+  .locks{border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);background:#0a140c}
+  .locks .wrap{padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  .locks .lbl{color:#6f8570;font-size:13px;font-weight:600}
+  .locks .logos{display:flex;align-items:center;gap:20px}
+  .locks .logos svg{height:26px;width:auto;display:block}
+
+  /* feature showcase — scroll-driven sticky phone swap (matches desktop) */
+  .showcase{padding:56px 0 20px}
+  .showcase .kick{font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--green);text-align:center;margin-bottom:8px}
+  .showcase .head{font-size:28px;font-weight:800;letter-spacing:-.02em;text-align:center;line-height:1.1;margin-bottom:20px}
+  .scroller{display:block}
+  .sc-stage{position:sticky;top:64px;height:56vh;display:flex;align-items:center;justify-content:center;z-index:1}
+  .sc-phone{position:relative;width:200px;border-radius:40px;background:#0a0a0b;padding:9px;box-shadow:0 0 0 2px #26331d,0 40px 80px -28px rgba(0,0,0,.9),0 0 110px -32px rgba(163,209,58,.4)}
+  .sc-phone .scr{position:relative;border-radius:32px;overflow:hidden;background:#000;aspect-ratio:1206/2622}
+  .sc-phone .scr img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transform:scale(1.04);transition:opacity .5s ease,transform .6s ease}
+  .sc-phone .scr img.on{opacity:1;transform:scale(1)}
+  .sc-panels{margin-top:10px}
+  .sc-panel{min-height:64vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+  .sc-panel .idx{font-size:13px;font-weight:800;letter-spacing:.1em;color:#5f8a24}
+  .sc-panel h3{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .sc-panel p{font-size:16px;color:var(--muted);line-height:1.5;max-width:330px}
+  .sc-panel .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .sc-panel .chip{font-size:12px;font-weight:600;color:#cfe89a;background:rgba(163,209,58,.1);border:1px solid rgba(163,209,58,.25);border-radius:9999px;padding:6px 13px}
+
+  /* value cards */
+  .values{padding:8px 0 20px}
+  .values .grid{display:flex;flex-direction:column;gap:12px}
+  .vcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;gap:15px;align-items:flex-start}
+  .vcard .em{flex:none;width:44px;height:44px;border-radius:12px;background:rgba(163,209,58,.13);display:flex;align-items:center;justify-content:center}
+  .vcard h4{font-size:17px;font-weight:800;margin-bottom:4px}
+  .vcard p{font-size:14px;color:var(--muted);line-height:1.5}
+
+  /* big CTA */
+  .cta{position:relative;overflow:hidden;background:radial-gradient(110% 100% at 50% 0,#2a4419,#0d1c12);border-top:1px solid rgba(255,255,255,.06)}
+  .cta .wrap{padding:60px 20px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .cta .ic{width:76px;height:76px;border-radius:20px;overflow:hidden;box-shadow:0 20px 50px -14px rgba(0,0,0,.6),0 0 90px -18px rgba(163,209,58,.6)}
+  .cta h2{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .cta .sub{font-size:16px;color:var(--muted)}
+
+  /* footer */
+  footer{background:#0a140c;border-top:1px solid rgba(255,255,255,.06);padding-bottom:96px}
+  footer .wrap{padding:30px 20px;display:flex;flex-direction:column;gap:16px;color:#6f8570;font-size:13px;text-align:center}
+  footer .brand{justify-content:center;font-size:16px}
+  footer .fl{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+  footer .fl a:active{color:var(--cream)}
+
+  /* sticky bottom download bar (mobile) */
+  .dockbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(10,20,12,.92);backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.08);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .dockbar .row{max-width:440px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .dockbar .ic{width:40px;height:40px;border-radius:11px;overflow:hidden;flex:none}
+  .dockbar .txt{flex:1;min-width:0}
+  .dockbar .txt b{font-size:14px;font-weight:800;display:block;line-height:1.15}
+  .dockbar .txt span{font-size:12px;color:var(--muted)}
+  .dockbar .go{flex:none;font-size:14px;font-weight:800;color:var(--dark);background:var(--green);border-radius:9999px;padding:12px 20px}
+
+  /* wider screens: keep the mobile column centered on a branded backdrop */
+  @media(min-width:600px){
+    body{background:#070d08}
+    .shell{max-width:440px;margin:0 auto;background:var(--dark);min-height:100vh;box-shadow:0 0 120px -20px rgba(0,0,0,.8)}
+    .dockbar{max-width:440px;left:50%;transform:translateX(-50%)}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- NAV -->
+<nav><div class="wrap">
+  <a class="brand" href="#top"><span class="ic"><img src="images/app-icon.png" alt="Cadence"></span>Cadence</a>
+  <a class="nav-cta" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">Download</a>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero" id="top"><div class="wrap">
+  <div class="ratepill"><span class="avs"><img src="images/avatars/a1.jpg" alt=""><img src="images/avatars/a2.jpg" alt=""><img src="images/avatars/a3.jpg" alt=""></span><span class="txt">Built by college runners for everyone</span></div>
+  <h1>The alarm that<br><span class="lime">makes you run.</span></h1>
+  <p class="sub">Cadence locks your favorite apps until you get up and run. Real accountability, a plan that adapts, and a coach in your pocket.</p>
+  <div class="actions">
+    <a class="badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener"><img src="images/app-store-badge.png" alt="Download on the App Store"></a>
+  </div>
+  <div class="hero-stage">
+    <div class="ph p1"><div class="scr"><img src="images/screen-app-lock.png" alt="Cadence app lock"></div></div>
+    <div class="ph p2"><div class="scr"><img src="images/screen-do-not-stop.png" alt="Do not stop"></div></div>
+  </div>
+</div></header>
+
+<div class="locks"><div class="wrap">
+  <span class="lbl">Locks the distractions that derail your day</span>
+  <span class="logos">
+    <svg viewBox="0 0 24 24" aria-label="Instagram"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="url(#ig)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.4" cy="7.6" r="1.1" fill="#fff"/></svg>
+    <svg viewBox="0 0 24 24" aria-label="TikTok"><path d="M16.5 3c.3 2.1 1.5 3.6 3.5 3.9v2.5c-1.3.1-2.5-.3-3.6-1v5.4c0 3.2-2.4 5.4-5.3 5.4-2.7 0-4.8-2-4.8-4.7 0-2.9 2.4-4.8 5.4-4.5v2.6c-.4-.1-.8-.2-1.2-.1-1.1.1-1.9.9-1.8 2.1 0 1.1.9 1.9 2 1.9 1.2 0 2.1-.9 2.1-2.3V3h3.7z" fill="#fff"/></svg>
+    <svg viewBox="0 0 24 24" aria-label="YouTube"><rect x="1" y="5" width="22" height="14" rx="4.5" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5z" fill="#fff"/></svg>
+  </span>
+</div></div>
+
+<!-- FEATURE SHOWCASE -->
+<section class="showcase" id="features"><div class="wrap">
+  <div class="kick">How it works</div>
+  <div class="head">One app, every excuse handled.</div>
+  <div class="scroller">
+    <div class="sc-stage">
+      <div class="sc-phone"><div class="scr" id="stageScr">
+        <img data-i="0" class="on" src="images/screen-app-lock.png" alt="App lock">
+        <img data-i="1" src="images/screen-do-not-stop.png" alt="Do not stop">
+        <img data-i="2" src="images/screen-training-plan.png" alt="Training plan">
+        <img data-i="3" src="images/screen-ai-coach.png" alt="AI coach">
+        <img data-i="4" src="images/screen-race-shape.png" alt="Race shape">
+      </div></div>
+    </div>
+    <div class="sc-panels">
+      <div class="sc-panel" data-i="0"><div class="idx">01</div><h3>Your apps unlock after your run</h3><p>Set the alarm. When it goes off, your distracting apps stay locked until you complete a qualifying run. No run, no scroll.</p></div>
+      <div class="sc-panel" data-i="1"><div class="idx">02</div><h3>No stopping until it's done</h3><p>The timer only counts while you're actually moving. There are no shortcuts and no fake runs to cheat your way back in.</p></div>
+      <div class="sc-panel" data-i="2"><div class="idx">03</div><h3>A plan that adapts to you</h3><p>Daily runs and strength work adjust automatically around your goal race, your schedule, and how you're recovering.</p></div>
+      <div class="sc-panel" data-i="3"><div class="idx">04</div><h3>Coaching that actually coaches</h3><p>Get personalized guidance on form, pacing, fueling and recovery every week, tuned to your progress.</p></div>
+      <div class="sc-panel" data-i="4"><div class="idx">05</div><h3>Watch your race times drop</h3><p>Cadence re-estimates your fitness after every single run, so you can see your predicted race times improve over time.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- VALUE CARDS -->
+<section class="values"><div class="wrap">
+  <div class="grid">
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0"/></svg></div><div><h4>Beat the morning scroll</h4><p>Replace the reflexive reach for your phone with a habit that actually moves you.</p></div></div>
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div><div><h4>Build a real streak</h4><p>Rank up and keep your streak alive as consistency compounds run after run.</p></div></div>
+    <div class="vcard"><div class="em"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3d13a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div><h4>Free for 3 days</h4><p>Try everything with no commitment. Cancel anytime before the trial ends.</p></div></div>
+  </div>
+</div></section>
+
+<!-- BIG CTA -->
+<section class="cta" id="download"><div class="wrap">
+  <div class="ic"><img src="images/app-icon.png" alt="Cadence"></div>
+  <h2>Stop scrolling.<br><span class="lime">Start running.</span></h2>
+  <p class="sub">Try Cadence free for 3 days.</p>
+  <a class="badge" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener"><img src="images/app-store-badge.png" alt="Download on the App Store"></a>
+</div></section>
+
+<!-- FOOTER -->
+<footer><div class="wrap">
+  <div class="brand" style="display:flex;align-items:center;gap:10px;font-weight:800"><span style="width:26px;height:26px;border-radius:8px;overflow:hidden;display:inline-block"><img src="images/app-icon.png" alt=""></span>Cadence</div>
+  <div class="fl">
+    <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">App Store</a>
+    <a href="#features">Features</a>
+    <a href="mailto:cadencerunningsupport@gmail.com">Contact</a>
+    <a href="https://adnan-yonathan.github.io/CadenceLegal/privacy-policy">Privacy</a>
+    <a href="https://adnan-yonathan.github.io/CadenceLegal/terms-of-use">Terms</a>
+  </div>
+  <div>© 2026 Cadence. For educational and fitness use.</div>
+</div></footer>
+
+</div>
+
+<script>
+  const scImgs=[...document.querySelectorAll('#stageScr img')];
+  const scPanels=[...document.querySelectorAll('.sc-panel')];
+  function scSet(i){scImgs.forEach(im=>im.classList.toggle('on',+im.dataset.i===i))}
+  const scIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)scSet(+e.target.dataset.i)})},{rootMargin:'-45% 0px -45% 0px',threshold:0});
+  scPanels.forEach(p=>scIO.observe(p));
+</script>
+
+<!-- STICKY DOWNLOAD DOCK -->
+<div class="dockbar"><div class="row">
+  <span class="ic"><img src="images/app-icon.png" alt="Cadence"></span>
+  <span class="txt"><b>Cadence</b><span>Free for 3 days</span></span>
+  <a class="go" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">Get</a>
+</div></div>
+
+</body>
+</html>
