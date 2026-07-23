@@ -12,38 +12,21 @@
 
 <script>
   // Routing, before render so there is no flash of the wrong page first:
-  //   1. iOS visitors go straight to the App Store listing.
-  //   2. Other phone-sized touch screens get the dedicated mobile landing page.
-  //   3. Everyone else stays on this desktop page.
+  //   1. Phones get the dedicated mobile landing page.
+  //   2. Everyone else stays on this desktop page.
+  // Nobody is sent to the App Store automatically — that's the badge's job.
   (function () {
-    var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
-
     var params;
     try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
-    // ?stay opens the real page on a phone (QA, sharing a section link);
-    // ?desktop forces the desktop layout on a phone.
-    var stay = !!(params && params.has('stay'));
+    // ?desktop forces the desktop layout on a phone (QA).
+    if (params && params.has('desktop')) return;
 
     var ua = navigator.userAgent || '';
-    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-      // iPadOS 13+ reports itself as a Mac; touch points give it away.
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-    // 1) iOS → App Store, once per tab (returning/back shouldn't bounce out again).
-    if (isIOS && !stay) {
-      var sent = false;
-      try {
-        sent = !!sessionStorage.getItem('cadence:sentToAppStore');
-        if (!sent) sessionStorage.setItem('cadence:sentToAppStore', '1');
-      } catch (e) { /* private mode: storage throws, redirect anyway */ }
-      if (!sent) { location.replace(APP_STORE); return; }
-    }
-
-    // 2) Phone-sized touch screens → mobile landing page (keep any ?stay/query).
-    if (params && params.has('desktop')) return;
+    var isPhoneUA = /iPhone|iPod|Android.*Mobile|Windows Phone/.test(ua);
     var w = Math.min(window.innerWidth || 9999, (window.screen && window.screen.width) || 9999);
     var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    if (w <= 760 && isTouch) {
+
+    if (isPhoneUA || (w <= 760 && isTouch)) {
       location.replace('landing-mobile.html' + location.search);
     }
   })();

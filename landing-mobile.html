@@ -13,34 +13,6 @@
 <!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
 <meta name="apple-itunes-app" content="app-id=6783027833">
 
-<script>
-  // iOS visitors go straight to the App Store listing.
-  // Runs before render so there is no flash of the page first.
-  (function () {
-    var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
-
-    var ua = navigator.userAgent || '';
-    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-      // iPadOS 13+ reports itself as a Mac; touch points give it away.
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (!isIOS) return;
-
-    // ?stay lets us open the real page on a phone (QA, sharing a section link).
-    try {
-      if (new URLSearchParams(location.search).has('stay')) return;
-    } catch (e) { /* no URLSearchParams: fall through and redirect */ }
-
-    // Redirect once per tab. Without this, returning from the App Store —
-    // or tapping back — bounces the visitor straight out again.
-    try {
-      if (sessionStorage.getItem('cadence:sentToAppStore')) return;
-      sessionStorage.setItem('cadence:sentToAppStore', '1');
-    } catch (e) { /* private mode: storage throws, redirect anyway */ }
-
-    location.replace(APP_STORE);
-  })();
-</script>
-
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cadence — The running coach that keeps you accountable">
 <meta property="og:description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run.">
