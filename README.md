@@ -59,18 +59,13 @@ so a few pixels are trimmed off the bottom of each.
 
 ## App Store handoff
 
-`assets/js/store-handoff.js` owns device detection and App Store links:
-
-- Every mobile visitor outside an in-app browser goes immediately to the App
-  Store product page. `?stay=1` disables the automatic handoff for QA.
-- Instagram's in-app browser shows only three numbered steps for opening the
-  page externally, with an arrow aimed at the top-right menu. Once the page
-  opens in a regular mobile browser, it redirects to the App Store product page.
+- Mobile visitors to the root page go directly to the App Store before the
+  landing page renders.
+- `landing-mobile.html` remains available for old inbound links but immediately
+  redirects every visitor to the same App Store product page.
 - Incoming Apple campaign parameters (`pt`, `ct`, and `mt`) carry through to
-  every store handoff URL. With `pt` present, an
+  the redirect URL. With `pt` present, an
   incoming `utm_campaign` or `utm_source` supplies `ct` when omitted.
-- Handoffs push `app_store_open` to `window.dataLayer` and dispatch a
-  `cadence:app-store-open` DOM event for the site's analytics tag to consume.
 
 Apple attribution needs the provider token from App Store Connect. Example:
 `https://cadencerun.app/?pt=PROVIDER_TOKEN&ct=instagram_reels&mt=8`.

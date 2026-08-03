@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  // Preserve old inbound URLs, but always send them to the App Store.
+  (function () {
+    var target = new URL('https://apps.apple.com/us/app/cadence-run-coach/id6783027833');
+    var params;
+    try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
+    if (params) {
+      ['pt', 'ct', 'mt'].forEach(function (key) {
+        var value = params.get(key);
+        if (value) target.searchParams.set(key, value);
+      });
+      if (target.searchParams.has('pt') && !target.searchParams.has('ct')) {
+        var campaign = params.get('utm_campaign') || params.get('utm_source');
+        if (campaign) target.searchParams.set('ct', campaign.slice(0, 30));
+      }
+      if (target.searchParams.has('pt') && !target.searchParams.has('mt')) {
+        target.searchParams.set('mt', '8');
+      }
+    }
+    location.replace(target.toString());
+  })();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cadence — The running coach that keeps you accountable</title>
@@ -122,16 +144,6 @@
   .dockbar .txt span{font-size:12px;color:var(--muted)}
   .dockbar .go{flex:none;font-size:14px;font-weight:800;color:var(--dark);background:var(--green);border-radius:9999px;padding:12px 20px}
 
-  .store-handoff[hidden]{display:none}
-  .store-handoff{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:calc(118px + env(safe-area-inset-top)) 20px 24px;background:rgba(4,10,6,.9);backdrop-filter:blur(16px)}
-  .handoff-arrow{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;width:104px;height:104px;overflow:visible}
-  .handoff-arrow path{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
-  .store-handoff-card{width:100%;max-width:400px;padding:12px 18px}
-  .handoff-steps{list-style:none;counter-reset:handoff;margin:0;padding:0;display:grid;gap:16px}
-  .handoff-steps li{counter-increment:handoff;display:grid;grid-template-columns:42px 1fr;align-items:center;gap:13px;color:var(--cream);font-size:18px;font-weight:750;line-height:1.35}
-  .handoff-steps li::before{content:counter(handoff);display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--green);color:var(--dark);font-size:18px;font-weight:900}
-  body.store-handoff-visible{overflow:hidden}
-
   /* wider screens: keep the mobile column centered on a branded backdrop */
   @media(min-width:600px){
     body{background:#070d08}
@@ -141,18 +153,6 @@
 </style>
 </head>
 <body>
-<aside class='store-handoff' id='storeHandoff' role='dialog' aria-modal='true' aria-label='Open the App Store' hidden>
-  <svg class='handoff-arrow' viewBox='0 0 104 104' aria-hidden='true'>
-    <path d='M12 90 C18 48 52 24 91 13 M72 8 L92 12 L84 31'/>
-  </svg>
-  <div class='store-handoff-card'>
-    <ol class='handoff-steps'>
-      <li>Tap the three dots in the top-right corner.</li>
-      <li>Tap Open in external browser.</li>
-      <li>The App Store page opens automatically.</li>
-    </ol>
-  </div>
-</aside>
 <div class="shell">
 
 <!-- NAV -->
@@ -247,8 +247,6 @@
   const scIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)scSet(+e.target.dataset.i)})},{rootMargin:'-45% 0px -45% 0px',threshold:0});
   scPanels.forEach(p=>scIO.observe(p));
 </script>
-<script src='assets/js/store-handoff.js'></script>
-
 <!-- STICKY DOWNLOAD DOCK -->
 <div class="dockbar"><div class="row">
   <span class="ic"><img src="images/app-icon.png" alt="Cadence"></span>

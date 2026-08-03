@@ -11,16 +11,10 @@
 <meta name="apple-itunes-app" content="app-id=6783027833">
 
 <script>
-  // Routing, before render so there is no flash of the wrong page first:
-  //   1. Phones get the dedicated mobile landing page.
-  //   2. Everyone else stays on this desktop page.
-  // Nobody is sent to the App Store automatically — that's the badge's job.
+  // Send mobile visitors directly to the App Store before the page renders.
   (function () {
     var params;
     try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
-    // ?desktop forces the desktop layout on a phone (QA).
-    if (params && params.has('desktop')) return;
-
     var ua = navigator.userAgent || '';
     var isIOS = /iPad|iPhone|iPod/.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -29,7 +23,21 @@
     var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
     if (isIOS || isPhoneUA || (w <= 760 && isTouch)) {
-      location.replace('landing-mobile.html' + location.search);
+      var store = new URL('https://apps.apple.com/us/app/cadence-run-coach/id6783027833');
+      if (params) {
+        ['pt', 'ct', 'mt'].forEach(function (key) {
+          var value = params.get(key);
+          if (value) store.searchParams.set(key, value);
+        });
+        if (store.searchParams.has('pt') && !store.searchParams.has('ct')) {
+          var campaign = params.get('utm_campaign') || params.get('utm_source');
+          if (campaign) store.searchParams.set('ct', campaign.slice(0, 30));
+        }
+        if (store.searchParams.has('pt') && !store.searchParams.has('mt')) {
+          store.searchParams.set('mt', '8');
+        }
+      }
+      location.replace(store.toString());
     }
   })();
 </script>
