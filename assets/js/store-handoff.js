@@ -82,33 +82,12 @@
     }
   }
 
-  function openOutsideInstagram() {
-    if (isIOS) {
-      track('app_store_open', 'instagram_native_store');
-      // Instagram can reject custom schemes without a user gesture. Schedule
-      // the standard HTTPS Store page first so the visitor is never stranded.
-      window.setTimeout(function () {
-        window.location.replace(webStoreUrl);
-      }, 900);
-      try {
-        window.location.replace(nativeStoreUrl);
-      } catch (e) {
-        window.location.replace(webStoreUrl);
-      }
-      return;
-    }
-
-    if (isAndroid) {
-      track('app_store_open', 'instagram_external_browser');
-      var storePath = webStoreUrl.replace(/^https?:\/\//, '');
-      var fallback = encodeURIComponent(webStoreUrl);
-      window.location.replace('intent://' + storePath +
-        '#Intent;scheme=https;package=com.android.chrome;' +
-        'S.browser_fallback_url=' + fallback + ';end');
-      return;
-    }
-
-    window.location.replace(webStoreUrl);
+  function showInstagramInstructions() {
+    var prompt = document.getElementById('storeHandoff');
+    if (!prompt) return;
+    prompt.hidden = false;
+    document.body.classList.add('store-handoff-visible');
+    track('app_store_prompt_view', 'instagram_instructions');
   }
 
   function start() {
@@ -118,7 +97,7 @@
     if (params && params.get('stay') === '1') return;
 
     if (isMobile && isInstagram) {
-      openOutsideInstagram();
+      showInstagramInstructions();
       return;
     }
 
