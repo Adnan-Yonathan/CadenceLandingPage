@@ -122,6 +122,19 @@
   .dockbar .txt span{font-size:12px;color:var(--muted)}
   .dockbar .go{flex:none;font-size:14px;font-weight:800;color:var(--dark);background:var(--green);border-radius:9999px;padding:12px 20px}
 
+  /* Instagram blocks reliable external-browser redirects. Show the escape
+     instructions immediately and still offer a one-tap native App Store open. */
+  .store-handoff[hidden]{display:none}
+  .store-handoff{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 20px 24px;background:rgba(4,10,6,.82);backdrop-filter:blur(16px)}
+  .store-handoff-card{width:100%;max-width:400px;margin-top:9vh;padding:26px 22px 22px;border:1px solid rgba(255,255,255,.13);border-radius:24px;background:#12210b;box-shadow:0 30px 90px rgba(0,0,0,.55);text-align:center}
+  .store-handoff-card .ic{width:64px;height:64px;margin:0 auto 16px;border-radius:18px;overflow:hidden}
+  .store-handoff-card h2{font-size:25px;line-height:1.1;margin-bottom:10px}
+  .store-handoff-card p{color:var(--muted);font-size:15px;line-height:1.5}
+  .store-handoff-card .steps{margin:18px 0;padding:14px;border-radius:14px;background:rgba(163,209,58,.09);color:var(--cream);font-weight:700}
+  .store-handoff-card .open-store{display:flex;align-items:center;justify-content:center;width:100%;padding:14px 18px;border-radius:14px;background:var(--green);color:var(--dark);font-size:16px;font-weight:800}
+  .store-handoff-card .note{margin-top:11px;font-size:12px;color:#6f8570}
+  body.store-handoff-visible{overflow:hidden}
+
   /* wider screens: keep the mobile column centered on a branded backdrop */
   @media(min-width:600px){
     body{background:#070d08}
@@ -131,6 +144,16 @@
 </style>
 </head>
 <body>
+<aside class='store-handoff' id='storeHandoff' role='dialog' aria-modal='true' aria-labelledby='storeHandoffTitle' hidden>
+  <div class='store-handoff-card'>
+    <div class='ic'><img src='images/app-icon.png' alt=''></div>
+    <h2 id='storeHandoffTitle'>Open Cadence outside Instagram</h2>
+    <p>Instagram's browser can block the App Store handoff.</p>
+    <p class='steps' data-handoff-instructions>Tap the menu in Instagram, then Open in external browser.</p>
+    <a class='open-store' data-handoff-open href='#'>Open App Store now</a>
+    <p class='note'>Your campaign attribution stays attached.</p>
+  </div>
+</aside>
 <div class="shell">
 
 <!-- NAV -->
@@ -225,6 +248,7 @@
   const scIO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)scSet(+e.target.dataset.i)})},{rootMargin:'-45% 0px -45% 0px',threshold:0});
   scPanels.forEach(p=>scIO.observe(p));
 </script>
+<script src='assets/js/store-handoff.js'></script>
 
 <!-- STICKY DOWNLOAD DOCK -->
 <div class="dockbar"><div class="row">

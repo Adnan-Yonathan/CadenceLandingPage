@@ -57,26 +57,23 @@ The phone frame crops with `object-fit: cover` at a 1320×2760 ratio, anchored t
 the top. The supplied screenshots are 1320px wide and slightly taller than that,
 so a few pixels are trimmed off the bottom of each.
 
-## App Store
+## App Store handoff
 
-Every App Store badge and both pricing CTAs point at
-<https://apps.apple.com/us/app/cadence-run-coach/id6783027833>, opening in a new
-tab (`target="_blank" rel="noopener"`) so the landing page stays put behind them.
+`assets/js/store-handoff.js` owns device detection and App Store links:
 
-iOS visitors are redirected there automatically by an inline script in `<head>`
-(it runs before render, so the page never flashes). Two guards:
+- iPhone and iPad visitors outside Instagram go to the App Store once per tab.
+  `?stay=1` disables the automatic handoff for QA.
+- Instagram's in-app browser gets immediate external-browser instructions and
+  a one-tap native App Store button. Android remains on the landing page because
+  Cadence is currently iOS-only.
+- Incoming Apple campaign parameters (`pt`, `ct`, and `mt`) carry through to
+  every store handoff URL. With `pt` present, an
+  incoming `utm_campaign` or `utm_source` supplies `ct` when omitted.
+- Handoffs push `app_store_open` to `window.dataLayer` and dispatch a
+  `cadence:app-store-open` DOM event for the site's analytics tag to consume.
 
-- **Once per tab.** The redirect sets a `sessionStorage` flag. Without it,
-  returning from the App Store — or tapping back — would bounce the visitor
-  straight out again, with no way to reach the page.
-- **`?stay=1` opts out**, so the real page can be opened on a phone for QA or to
-  share a link to a specific section.
-
-iPadOS 13+ identifies itself as a Mac, so detection also checks
-`maxTouchPoints` — desktop Safari reports `0` and is left alone.
-
-Non-iOS traffic (Android, desktop) is never redirected. Safari additionally
-renders a native App Store banner via the `apple-itunes-app` meta tag.
+Apple attribution needs the provider token from App Store Connect. Example:
+`https://cadencerun.app/?pt=PROVIDER_TOKEN&ct=instagram_reels&mt=8`.
 
 ## Notes
 
