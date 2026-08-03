@@ -63,8 +63,16 @@
     var links = document.querySelectorAll('a');
     Array.prototype.forEach.call(links, function (link) {
       if (link.href.indexOf('apps.apple.com') < 0 || link.href.indexOf('id' + APP_ID) < 0) return;
-      link.href = webStoreUrl;
-      link.addEventListener('click', function () { track('app_store_open', 'link'); });
+      link.href = isIOS ? nativeStoreUrl : webStoreUrl;
+      link.removeAttribute('target');
+      link.addEventListener('click', function () {
+        track('app_store_open', isIOS ? 'native_link' : 'web_link');
+        if (isIOS) {
+          window.setTimeout(function () {
+            window.location.replace(webStoreUrl);
+          }, 900);
+        }
+      });
     });
 
     var smartBanner = document.querySelector('meta[name=apple-itunes-app]');
@@ -75,26 +83,23 @@
   }
 
   function openOutsideInstagram() {
-    track('app_store_open', 'instagram_external_browser');
-
     if (isIOS) {
-      var externalUrl = new URL(window.location.href);
-      externalUrl.searchParams.delete('stay');
-      externalUrl.searchParams.set('external_store', '1');
-
-      // Ask iOS to move the handoff into Safari. Once this page loads there,
-      // the external_store flag below immediately launches the App Store.
-      window.location.replace('x-safari-' + externalUrl.href);
-
-      // Some Instagram versions reject external-browser schemes. In that case,
-      // fall back to opening the App Store directly instead of showing a prompt.
+      track('app_store_open', 'instagram_native_store');
+      // Instagram can reject custom schemes without a user gesture. Schedule
+      // the standard HTTPS Store page first so the visitor is never stranded.
       window.setTimeout(function () {
+        window.location.replace(webStoreUrl);
+      }, 900);
+      try {
         window.location.replace(nativeStoreUrl);
-      }, 800);
+      } catch (e) {
+        window.location.replace(webStoreUrl);
+      }
       return;
     }
 
     if (isAndroid) {
+      track('app_store_open', 'instagram_external_browser');
       var storePath = webStoreUrl.replace(/^https?:\/\//, '');
       var fallback = encodeURIComponent(webStoreUrl);
       window.location.replace('intent://' + storePath +
@@ -112,31 +117,16 @@
     // ?stay=1 keeps the landing page available for mobile QA and sharing.
     if (params && params.get('stay') === '1') return;
 
-    // This is the second half of the Instagram handoff: Safari reloads this
-    // page with the flag and immediately opens the native App Store listing.
-    if (params && params.get('external_store') === '1' && isIOS && !isInstagram) {
-      track('app_store_open', 'external_browser_to_native_store');
-      window.location.replace(nativeStoreUrl);
-      return;
-    }
-
     if (isMobile && isInstagram) {
       openOutsideInstagram();
       return;
     }
 
-    // Cadence is currently an iOS app. Android visitors keep the mobile page;
-    // iPhone and iPad visitors outside Instagram go straight to the App Store.
-    if (isIOS) {
-      var alreadySent = false;
-      try {
-        alreadySent = sessionStorage.getItem('cadence:sentToAppStore') === '1';
-        if (!alreadySent) sessionStorage.setItem('cadence:sentToAppStore', '1');
-      } catch (e) {}
-      if (!alreadySent) {
-        track('app_store_open', 'automatic');
-        window.location.replace(webStoreUrl);
-      }
+    // Any phone that reaches the page in its regular browser goes immediately
+    // to the App Store product page. ?stay=1 remains the explicit QA escape.
+    if (isMobile) {
+      track('app_store_open', 'automatic_mobile');
+      window.location.replace(webStoreUrl);
     }
   }
 
