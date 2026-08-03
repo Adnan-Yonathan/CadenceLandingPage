@@ -74,26 +74,36 @@
     }
   }
 
-  function showInstagramPrompt() {
-    var prompt = document.getElementById('storeHandoff');
-    if (!prompt) return;
+  function openOutsideInstagram() {
+    track('app_store_open', 'instagram_external_browser');
 
-    var instructions = prompt.querySelector('[data-handoff-instructions]');
-    var button = prompt.querySelector('[data-handoff-open]');
-    if (instructions) {
-      instructions.textContent = isIOS
-        ? 'Tap three dots in Instagram, then Open in external browser.'
-        : 'Tap the menu in Instagram, then Open in external browser or Open in Chrome.';
+    if (isIOS) {
+      var externalUrl = new URL(window.location.href);
+      externalUrl.searchParams.delete('stay');
+      externalUrl.searchParams.set('external_store', '1');
+
+      // Ask iOS to move the handoff into Safari. Once this page loads there,
+      // the external_store flag below immediately launches the App Store.
+      window.location.replace('x-safari-' + externalUrl.href);
+
+      // Some Instagram versions reject external-browser schemes. In that case,
+      // fall back to opening the App Store directly instead of showing a prompt.
+      window.setTimeout(function () {
+        window.location.replace(nativeStoreUrl);
+      }, 800);
+      return;
     }
-    if (button) {
-      button.href = isIOS ? nativeStoreUrl : webStoreUrl;
-      button.addEventListener('click', function () {
-        track('app_store_open', isIOS ? 'native_scheme' : 'web_from_instagram');
-      });
+
+    if (isAndroid) {
+      var storePath = webStoreUrl.replace(/^https?:\/\//, '');
+      var fallback = encodeURIComponent(webStoreUrl);
+      window.location.replace('intent://' + storePath +
+        '#Intent;scheme=https;package=com.android.chrome;' +
+        'S.browser_fallback_url=' + fallback + ';end');
+      return;
     }
-    prompt.hidden = false;
-    document.body.classList.add('store-handoff-visible');
-    track('app_store_prompt_view', 'instagram_prompt');
+
+    window.location.replace(webStoreUrl);
   }
 
   function start() {
@@ -102,8 +112,16 @@
     // ?stay=1 keeps the landing page available for mobile QA and sharing.
     if (params && params.get('stay') === '1') return;
 
+    // This is the second half of the Instagram handoff: Safari reloads this
+    // page with the flag and immediately opens the native App Store listing.
+    if (params && params.get('external_store') === '1' && isIOS && !isInstagram) {
+      track('app_store_open', 'external_browser_to_native_store');
+      window.location.replace(nativeStoreUrl);
+      return;
+    }
+
     if (isMobile && isInstagram) {
-      showInstagramPrompt();
+      openOutsideInstagram();
       return;
     }
 

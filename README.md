@@ -63,9 +63,10 @@ so a few pixels are trimmed off the bottom of each.
 
 - iPhone and iPad visitors outside Instagram go to the App Store once per tab.
   `?stay=1` disables the automatic handoff for QA.
-- Instagram's in-app browser gets immediate external-browser instructions and
-  a one-tap native App Store button. Android remains on the landing page because
-  Cadence is currently iOS-only.
+- Instagram visitors are handed off immediately: iOS opens the page in Safari
+  and then launches the native App Store listing; Android opens the listing in
+  Chrome. If Instagram blocks the Safari scheme, iOS falls back to opening the
+  App Store directly. No intermediate prompt is shown.
 - Incoming Apple campaign parameters (`pt`, `ct`, and `mt`) carry through to
   every store handoff URL. With `pt` present, an
   incoming `utm_campaign` or `utm_source` supplies `ct` when omitted.
