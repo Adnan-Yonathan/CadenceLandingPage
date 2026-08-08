@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1c12">
+  <meta name="description" content="Build your Cadence morning running system.">
+  <title>Cadence — Run first. Win the day.</title>
+  <link rel="icon" href="images/app-icon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/onboarding.css">
+</head>
+<body>
+  <main class="app" id="app" aria-live="polite">
+    <header class="topbar">
+      <button class="icon-button" id="back" aria-label="Go back">&#8592;</button>
+      <div class="progress" aria-label="Onboarding progress"><span id="progressFill"></span></div>
+      <button class="icon-button restart" id="restart" aria-label="Restart onboarding">&#8635;</button>
+    </header>
+    <section class="screen" id="screen"></section>
+  </main>
+  <noscript>JavaScript is required to complete Cadence onboarding.</noscript>
+  <script src="assets/js/onboarding.js" defer></script>
+</body>
+</html>
