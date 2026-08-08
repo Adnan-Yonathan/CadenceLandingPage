@@ -2,24 +2,14 @@
 <html lang="en">
 <head>
 <script>
-  // Preserve old inbound URLs, but always send them to the App Store.
+  // Legacy inbound links land here. This page has always been mobile-only, so
+  // there is no device check — everything goes straight into the onboarding
+  // funnel, carrying its query string so campaign attribution survives.
   (function () {
-    var target = new URL('https://apps.apple.com/us/app/cadence-run-coach/id6783027833');
+    var target = new URL('onboarding.html', location.href);
     var params;
     try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
-    if (params) {
-      ['pt', 'ct', 'mt'].forEach(function (key) {
-        var value = params.get(key);
-        if (value) target.searchParams.set(key, value);
-      });
-      if (target.searchParams.has('pt') && !target.searchParams.has('ct')) {
-        var campaign = params.get('utm_campaign') || params.get('utm_source');
-        if (campaign) target.searchParams.set('ct', campaign.slice(0, 30));
-      }
-      if (target.searchParams.has('pt') && !target.searchParams.has('mt')) {
-        target.searchParams.set('mt', '8');
-      }
-    }
+    if (params) target.search = params.toString();
     location.replace(target.toString());
   })();
 </script>
@@ -33,7 +23,8 @@
 <link rel="canonical" href="https://cadencerun.app/">
 
 <!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
-<meta name="apple-itunes-app" content="app-id=6783027833">
+<!-- Smart banner removed: its "Open" prompt pulled visitors to the App Store
+     before they had seen the funnel this page exists to start. -->
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cadence — The running coach that keeps you accountable">

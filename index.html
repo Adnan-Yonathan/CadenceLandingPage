@@ -7,11 +7,18 @@
 <meta name="description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run. Cadence keeps you consistent and coaches you to get faster.">
 <meta name="theme-color" content="#0d1c12">
 
-<!-- Safari on iOS shows this as a native "Open in App Store" banner. -->
-<meta name="apple-itunes-app" content="app-id=6783027833">
+<!-- No apple-itunes-app smart banner. On iOS Safari it rendered an "Open"
+     prompt for the App Store that competed with the onboarding funnel — the
+     visitor was asked to leave before they had seen anything. -->
 
 <script>
-  // Send mobile visitors directly to the App Store before the page renders.
+  // Send mobile visitors into the Web2App onboarding before the page renders.
+  //
+  // This has to work inside in-app browsers too — most paid traffic arrives via
+  // an Instagram or TikTok webview, never Safari. Those webviews report the host
+  // platform in their user agent ("iPhone", "Android"), so the checks below
+  // already catch them; the explicit in-app token list is a belt-and-braces for
+  // any webview that reports something unusual, and costs nothing.
   (function () {
     var params;
     try { params = new URLSearchParams(location.search); } catch (e) { params = null; }
@@ -19,25 +26,18 @@
     var isIOS = /iPad|iPhone|iPod/.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     var isPhoneUA = /iPhone|iPod|Android.*Mobile|Windows Phone/.test(ua);
+    // Instagram, Facebook, TikTok, Snapchat, Twitter, LinkedIn, Pinterest, Line.
+    var isInAppBrowser =
+      /Instagram|FBAN|FBAV|FB_IAB|Messenger|TikTok|BytedanceWebview|musical_ly|Snapchat|Twitter|LinkedInApp|Pinterest|Line\//.test(ua);
     var w = Math.min(window.innerWidth || 9999, (window.screen && window.screen.width) || 9999);
     var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-    if (isIOS || isPhoneUA || (w <= 760 && isTouch)) {
-      var store = new URL('https://apps.apple.com/us/app/cadence-run-coach/id6783027833');
-      if (params) {
-        ['pt', 'ct', 'mt'].forEach(function (key) {
-          var value = params.get(key);
-          if (value) store.searchParams.set(key, value);
-        });
-        if (store.searchParams.has('pt') && !store.searchParams.has('ct')) {
-          var campaign = params.get('utm_campaign') || params.get('utm_source');
-          if (campaign) store.searchParams.set('ct', campaign.slice(0, 30));
-        }
-        if (store.searchParams.has('pt') && !store.searchParams.has('mt')) {
-          store.searchParams.set('mt', '8');
-        }
-      }
-      location.replace(store.toString());
+    if (isIOS || isPhoneUA || isInAppBrowser || (w <= 760 && isTouch)) {
+      // Every inbound param rides along: onboarding.js forwards the whole query
+      // string to checkout, so campaign attribution survives the funnel.
+      var onboarding = new URL('onboarding.html', location.href);
+      if (params) onboarding.search = params.toString();
+      location.replace(onboarding.toString());
     }
   })();
 </script>
