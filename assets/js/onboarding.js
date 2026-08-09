@@ -6,6 +6,11 @@
   // re-asking thirty questions. Publishable key only — this file is public.
   const STASH='https://tunpzyyedwrbdzurzsoh.supabase.co/functions/v1/web-onboarding-stash';
   const STASH_KEY='sb_publishable_AyMYLjjb1MwqVfJEe8gXEw_-60o8wOb';
+  // Supabase's hosted OAuth entry point. Used directly rather than pulling in
+  // supabase-js: all we need is the redirect and the email claim off the
+  // returned token, and this file has no build step or dependencies.
+  const AUTHORIZE='https://tunpzyyedwrbdzurzsoh.supabase.co/auth/v1/authorize';
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const state={step:0,answers:{days:['Mon','Tue','Wed','Thu','Fri'],time:'07:00'},signature:false};
   try{Object.assign(state,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(_e){}
   const screen=document.getElementById('screen'),back=document.getElementById('back'),restart=document.getElementById('restart'),fill=document.getElementById('progressFill');
@@ -25,8 +30,65 @@
   const howRow=(n,title,detail)=>`<div class="card how-row"><b>${n}</b><div><b>${title}</b><span>${detail}</span></div></div>`;
   const reviews=`<div class="card review"><div class="stars">★★★★★</div><h3>Such a great app</h3><p>Couldn't have asked for an easier, user-friendly app to track my training with!</p><small>LoganBety</small></div><div class="card review"><div class="stars">★★★★★</div><h3>Great app</h3><p>Very easy to use and helps me stay on track with my workout plan</p><small>Ant_10193</small></div>`;
   const research=(cards,foot)=>`<div class="research">${cards.map(c=>`<div class="card"><h3>${c[0]}</h3><p>${c[1]}</p></div>`).join('')}</div><p class="footnote">${foot}</p>`;
+  const svg=(path,cls)=>`<svg class="${cls}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg>`;
+  const LOCK='M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z';
+  const UNLOCK='M7 10V7a5 5 0 019.6-2l-1.9.8A3 3 0 009 7v3h9a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1z';
+  const CLOCK='M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.4l3.6 2.1-1 1.7L11 13V7h2z';
+  const APPLE='M16.36 12.78c.02 2.6 2.28 3.47 2.3 3.48-.02.06-.36 1.24-1.19 2.46-.72 1.05-1.46 2.1-2.63 2.12-1.15.02-1.52-.68-2.83-.68-1.32 0-1.73.66-2.82.7-1.13.04-1.99-1.13-2.71-2.18-1.48-2.14-2.61-6.05-1.09-8.69.75-1.31 2.1-2.14 3.56-2.16 1.11-.02 2.16.75 2.84.75.68 0 1.95-.92 3.29-.79.56.02 2.13.23 3.14 1.7-.08.05-1.87 1.1-1.86 3.29zM14.2 4.6c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.55 1.31-.56.65-1.05 1.68-.92 2.68.97.07 1.96-.49 2.57-1.23z';
+  // The nine apps behind the shield, mirroring `OnbAppTile.grid`. As in the app,
+  // the brand *colour* does the recognising next to a generic glyph — shipping
+  // real logos would mean bundling trademarked artwork.
+  const TILES=[
+    ['#C1348A','#fff','M9 4l-1.5 2H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-3.5L15 4H9zm3 5a5 5 0 110 10 5 5 0 010-10z'],
+    ['#0B0B0B','#fff','M9 18a3 3 0 11-2-2.83V5l11-2v10.17A3 3 0 1118 16V7.5L9 9.3V18z'],
+    ['#E21B1B','#fff','M8 5v14l11-7z'],
+    ['#7B3FE4','#fff','M6 9h12a4 4 0 014 4 3 3 0 01-5.4 1.8L15 13H9l-1.6 1.8A3 3 0 012 13a4 4 0 014-4z'],
+    ['#16181C','#fff','M4 4h16a2 2 0 012 2v9a2 2 0 01-2 2h-8l-6 4v-4H4a2 2 0 01-2-2V6a2 2 0 012-2z'],
+    ['#E8622C','#fff','M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm3 3.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-8 8a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4-4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z'],
+    ['#F5D90A','#16281A','M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 0h2v6h-6v-2h4v-4zM12 8a4 4 0 110 8 4 4 0 010-8z'],
+    ['#2AABEE','#fff','M22 2L2 10l7 3 3 7 10-18z'],
+    ['#B5121B','#fff','M3 4h18v16H3V4zm2 2v2h2V6H5zm12 0v2h2V6h-2zM5 10v4h14v-4H5zm0 6v2h2v-2H5zm12 0v2h2v-2h-2z'],
+  ];
+  // Chapters, ported from `chapter(for:)` in OnboardingFlow.swift. The bar
+  // belongs to the CURRENT chapter, fills across it, and starts over when the
+  // next one begins — so the total length of the flow is never on display.
+  // Every chapter must be a contiguous run of `steps`; `assertChapters` holds
+  // that invariant, exactly as the app's ordering does.
+  const CHAPTERS=[
+    ['quiz',['welcome','sex','source','alarmNeed','alarmNow','struggle','motivation','name']],
+    ['analysis',['analyzing','analysis']],
+    ['problems',['willpower','mornings','scroll','missed']],
+    ['solutions',['scienceMorning','scienceBody','transformation','proof','featureAlarm','featureCoach','featureGame','reviews']],
+    ['personalize',['days','time','notifications']],
+    ['reveal',['how','ring','shoe','run','unlock','identity','spillover','invest','commit','signIn']],
+  ];
+  const chapterOf=id=>{const c=CHAPTERS.find(c=>c[1].indexOf(id)>=0);return c?c[0]:'reveal';};
+  // A step that slips into the wrong chapter silently produces a bar that jumps
+  // or never fills, so fail loudly in the console rather than shipping it.
+  function assertChapters(){
+    const seen=[];
+    steps.forEach(s=>{const c=chapterOf(s.id);if(seen[seen.length-1]!==c)seen.push(c);});
+    const dupes=seen.filter((c,i)=>seen.indexOf(c)!==i);
+    if(dupes.length)console.warn('Onboarding chapters are not contiguous:',dupes);
+    steps.forEach(s=>{if(!CHAPTERS.some(c=>c[1].indexOf(s.id)>=0))console.warn('Step has no chapter:',s.id);});
+  }
+  // Progress within the current chapter. 1-based, and fills to 100% on the
+  // chapter's last step so finishing one feels earned.
+  function chapterProgress(){
+    const here=chapterOf(steps[state.step].id);
+    const within=steps.filter(s=>chapterOf(s.id)===here);
+    const i=within.findIndex(s=>s.id===steps[state.step].id);
+    return ((i<0?0:i)+1)/Math.max(within.length,1);
+  }
   const steps=[
-    {id:'welcome',render:()=>scaffold({title:'Run first.',accent:'Win the day.',subtitle:'Cadence wakes you, locks your apps until you actually go, and hands the day back the moment you do.',center:true},`<div class="hero-art"><div class="orbit"></div><img src="images/app-icon.png" alt="Cadence"></div>`,button('Show me how'))},
+    {id:'welcome',render:()=>scaffold({title:'Run first.',accent:'Win the day.',subtitle:'Cadence wakes you, locks your apps until you actually go, and hands the day back the moment you do.',center:true},
+      `<div class="mock" id="mock">`+
+      `<div class="mockchip">${svg(CLOCK,'shut')}${svg(UNLOCK,'open')}<b id="mockChip">Run to unlock</b></div>`+
+      `<div class="tiles">${TILES.map(t=>`<span class="tile" style="--bg:${t[0]};--fg:${t[1]}">${svg(LOCK,'shield')}${svg(t[2],'glyph')}</span>`).join('')}</div>`+
+      `<div class="mockbar"><span></span></div>`+
+      `<div class="mocklabel" id="mockLabel">10 minutes to unlock</div>`+
+      `</div>`,
+      button('Show me how')+`<button class="linkbtn" id="haveMembership">Already have a membership? Sign in</button>`)},
     {id:'sex',render:()=>scaffold({title:'First, the basics',subtitle:'This tunes your paces and your plan.'},options('sex',['Male','Female']))},
     {id:'source',render:()=>scaffold({title:'Where did you hear about Cadence?',subtitle:'So we know who to thank.'},options('source',[['TikTok','♪'],['Instagram','◎'],['YouTube','▶'],['A friend or family','👥'],['The App Store',''],['Google or search','⌕'],['Somewhere else','…']]))},
     {id:'alarmNeed',render:()=>scaffold({title:"What's the first thing you do when you wake up?",subtitle:'Be honest. Everyone starts here.'},options('alarmNeed',['Reach for my phone','Hit snooze. Repeatedly','Lie there dreading the day','Get straight up']))},
@@ -64,8 +126,61 @@
     // for a card. Framed as delivery rather than signup because that is exactly
     // what it is: the activation link is how Cadence gets unlocked on the phone,
     // and this address is also the key the app uses to find these answers again.
-    {id:'email',render:()=>scaffold({eyebrow:'ONE LAST THING',title:'Where should we send your activation link?',subtitle:'You need it to unlock Cadence on your phone after checkout.'},`<input class="input" id="emailInput" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(state.answers.email)}" placeholder="you@email.com" maxlength="254">`,button('Continue to checkout','emailNext',!validEmail(state.answers.email))+`<p class="legal">We use this to send your activation link and receipt. Your plan is saved to it so you don't answer these questions twice.</p>`)},
+    // Mirrors `Phase.signIn` in the app, which sits at exactly this point for
+    // the same reason: it binds the purchase to a real account at the moment of
+    // sale rather than after it. Apple also fixes the join that plain email
+    // couldn't — a runner who picks Hide My Email gets the SAME relay address
+    // here and in the app, because the relay is per Apple ID per team, so
+    // `web-onboarding-claim` still finds these answers.
+    {id:'signIn',render:()=>state.emailFallback?emailStep():scaffold(
+      {eyebrow:'ONE LAST THING',title:'Save your plan to your account',subtitle:'Sign in once and Cadence unlocks on your phone the moment you pay — with every answer you just gave already in place.'},
+      `<div class="how">${howRow('◆','Your plan carries over',"The thirty questions you just answered are waiting in the app.")}${howRow('↺','Nothing to dig out of your inbox','Signing in on your phone is what unlocks it — no activation link to lose.')}</div>`,
+      `<button class="apple" id="appleBtn">${svg(APPLE,'')}<span>Sign in with Apple</span></button><button class="linkbtn" id="useEmail">Use email instead</button>`)},
   ];
+  // Kept intact as the fallback. Apple sign-in is the front door, but a runner
+  // who declines it — or a browser where the redirect fails — must still be
+  // able to buy, so this path is never removed, only bypassed.
+  const emailStep=()=>scaffold({eyebrow:'ONE LAST THING',title:'Where should we send your activation link?',subtitle:'You need it to unlock Cadence on your phone after checkout.'},`${state.authError?`<div class="notice">We couldn't finish the Apple sign-in just then — no harm done. Email works exactly the same.</div>`:''}<input class="input" id="emailInput" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(state.answers.email)}" placeholder="you@email.com" maxlength="254">`,button('Continue to checkout','emailNext',!validEmail(state.answers.email))+`<p class="legal">We use this to send your activation link and receipt. Your plan is saved to it so you don't answer these questions twice.</p>`);
+  // Hands off to Supabase's hosted Apple flow and comes back to this page.
+  // `state` is already in localStorage, so the runner returns to this same step.
+  function appleSignIn(){
+    save();
+    const back=location.origin+location.pathname+location.search;
+    location.assign(AUTHORIZE+'?provider=apple&redirect_to='+encodeURIComponent(back));
+  }
+  /// The email claim off the returned access token. Read for its address only —
+  /// never for authorisation — so decoding without verifying is safe here: the
+  /// stash endpoint is public and email-keyed either way.
+  function tokenEmail(token){
+    try{
+      const part=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+      const bytes=Uint8Array.from(atob(part+'=='.slice(0,(4-part.length%4)%4)),c=>c.charCodeAt(0));
+      const email=JSON.parse(new TextDecoder().decode(bytes)).email;
+      return validEmail(email)?String(email).trim().toLowerCase():null;
+    }catch(_e){return null;}
+  }
+  /// Handles the return leg of the Apple redirect. Returns 'ok' when we came
+  /// back with an address, 'fallback' when Apple didn't work out, or false when
+  /// this is an ordinary page load.
+  function consumeAuthRedirect(){
+    const hash=new URLSearchParams(String(location.hash||'').replace(/^#/,''));
+    const query=new URLSearchParams(location.search);
+    const token=hash.get('access_token');
+    const failed=hash.get('error')||query.get('error');
+    if(!token&&!failed)return false;
+    // Strip the token out of the address bar before anything else renders, but
+    // keep the query: `checkout` forwards those attribution params to Superwall,
+    // and dropping them here would silently lose the source of every Apple sale.
+    history.replaceState(null,'',location.pathname+location.search);
+    if(token){
+      const email=tokenEmail(token);
+      if(email){state.answers.email=email;state.appleSignedIn=true;save();return 'ok';}
+    }
+    // Apple isn't configured yet, or the runner backed out. Either way this must
+    // never dead-end: drop to email rather than trapping them one step from paying.
+    state.emailFallback=true;state.authError=true;save();
+    return 'fallback';
+  }
   // Saves the answers so the app can claim them after the runner pays. Returns
   // the stash id, or null if anything went wrong — a failure here must never
   // cost a sale, so every path resolves rather than throws.
@@ -88,8 +203,9 @@
     }).then(r=>r.ok?r.json():null).then(d=>(d&&d.id)||null).catch(()=>null).finally(()=>clearTimeout(timer));
   }
   function checkout(){
-    const btn=document.getElementById('emailNext');
+    const btn=document.getElementById('emailNext')||document.getElementById('appleBtn');
     if(btn){btn.disabled=true;btn.textContent='Saving your plan…';}
+    const link=document.getElementById('useEmail');if(link)link.remove();
     stash().then(id=>{
       const url=new URL(CHECKOUT),incoming=new URLSearchParams(location.search);
       incoming.forEach((v,k)=>url.searchParams.set(k,v));
@@ -118,14 +234,62 @@
     // on a prompt that grants nothing makes the real in-app ask harder. This
     // screen is now purely a priming beat for the prompt the app will show.
     const notify=document.getElementById('notify'),skip=document.getElementById('skip');if(notify)notify.onclick=next;if(skip)skip.onclick=next;
+    // Welcome hero. One cycle: shielded while the run bar fills, then the tiles
+    // flip open and it starts over. Reduce Motion holds the unlocked state.
+    const mock=document.getElementById('mock');
+    if(mock){
+      const bar=mock.querySelector('.mockbar span'),chip=document.getElementById('mockChip'),label=document.getElementById('mockLabel');
+      if(reduceMotion){mock.classList.add('unlocked');chip.textContent='Unlocked';label.textContent='Your day, handed back';bar.style.width='100%';}
+      else{
+        const cycle=()=>{
+          mock.classList.remove('unlocked');chip.textContent='Run to unlock';label.textContent='10 minutes to unlock';
+          bar.style.transition='none';bar.style.width='0%';
+          requestAnimationFrame(()=>{bar.style.transition='width 2.8s linear';bar.style.width='100%';});
+          mockTimer=setTimeout(()=>{
+            mock.classList.add('unlocked');chip.textContent='Unlocked';label.textContent='Your day, handed back';
+            mockTimer=setTimeout(cycle,1600);
+          },2800);
+        };
+        cycle();
+      }
+    }
+    // The web equivalent of the app's "Already have a membership?" escape hatch:
+    // someone who already paid must not have to walk thirty steps to say so.
+    const have=document.getElementById('haveMembership');if(have)have.onclick=()=>location.assign('manage-subscription.html');
+    const apple=document.getElementById('appleBtn');if(apple)apple.onclick=appleSignIn;
+    const useEmail=document.getElementById('useEmail');if(useEmail)useEmail.onclick=()=>{state.emailFallback=true;save();render();};
     const ei=document.getElementById('emailInput'),en=document.getElementById('emailNext');if(ei){ei.focus();ei.oninput=()=>{state.answers.email=ei.value.trim();save();en.disabled=!validEmail(state.answers.email);};en.onclick=()=>{if(validEmail(ei.value))checkout();};ei.onkeydown=e=>{if(e.key==='Enter'&&validEmail(ei.value))en.click();};}
     const slide=document.getElementById('slide');if(slide){let start=0;slide.onpointerdown=e=>{start=e.clientX;slide.setPointerCapture(e.pointerId)};slide.onpointerup=e=>{if(e.clientX-start>80)next();};slide.onclick=()=>next();}
     const ring=document.getElementById('runRing');if(ring){let p=0;const timer=setInterval(()=>{if(state.step!==steps.findIndex(s=>s.id==='run'))return clearInterval(timer);p+=2;ring.style.setProperty('--run',p+'%');document.getElementById('runText').textContent=Math.min(10,Math.floor(p/10))+':00';if(p>=100){clearInterval(timer);const b=document.getElementById('runNext');b.disabled=false;b.textContent='See what happens';b.onclick=next;}},100);}
     const canvas=document.getElementById('signature');if(canvas){const ctx=canvas.getContext('2d');ctx.strokeStyle='#17301b';ctx.lineWidth=5;ctx.lineCap='round';let drawing=false;const pt=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}};canvas.onpointerdown=e=>{drawing=true;const p=pt(e);ctx.beginPath();ctx.moveTo(p.x,p.y);canvas.setPointerCapture(e.pointerId)};canvas.onpointermove=e=>{if(!drawing)return;const p=pt(e);ctx.lineTo(p.x,p.y);ctx.stroke();state.signature=true;document.getElementById('commitNext').disabled=false;save();};canvas.onpointerup=()=>drawing=false;document.getElementById('clearSig').onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);state.signature=false;save();document.getElementById('commitNext').disabled=true;};document.getElementById('commitNext').onclick=next;}
   }
-  let autoTimer;
-  function render(){clearTimeout(autoTimer);state.step=Math.max(0,Math.min(state.step,steps.length-1));const step=steps[state.step];fill.style.width=`${(state.step/(steps.length-1))*100}%`;back.disabled=state.step===0;screen.innerHTML=step.render();wire();if(step.auto)autoTimer=setTimeout(next,step.auto);window.scrollTo(0,0);}
+  let autoTimer,mockTimer,lastChapter=null;
+  /// Drives the per-chapter bar. Within a chapter it animates up to the new
+  /// fill; crossing a boundary it snaps empty first, then fills, so each chapter
+  /// gets a visibly fresh bar. Reduce Motion skips straight to the target.
+  function syncChapterBar(){
+    const here=chapterOf(steps[state.step].id);
+    const target=Math.round(chapterProgress()*100)+'%';
+    const crossed=lastChapter!==null&&lastChapter!==here;
+    lastChapter=here;
+    if(crossed&&!reduceMotion){
+      fill.style.transition='none';
+      fill.style.width='0%';
+      // Two frames: one to commit the reset, one to animate away from it.
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.transition='';fill.style.width=target;}));
+    }else{
+      fill.style.transition=reduceMotion?'none':'';
+      fill.style.width=target;
+    }
+  }
+  function render(){clearTimeout(autoTimer);clearTimeout(mockTimer);state.step=Math.max(0,Math.min(state.step,steps.length-1));const step=steps[state.step];syncChapterBar();back.disabled=state.step===0;screen.innerHTML=step.render();wire();if(step.auto)autoTimer=setTimeout(next,step.auto);window.scrollTo(0,0);}
   back.onclick=()=>{if(state.step>0){state.step--;save();render();}};
-  restart.onclick=()=>{if(confirm('Restart Cadence onboarding?')){localStorage.removeItem(KEY);state.step=0;state.answers={days:['Mon','Tue','Wed','Thu','Fri'],time:'07:00'};state.signature=false;render();}};
+  restart.onclick=()=>{if(confirm('Restart Cadence onboarding?')){localStorage.removeItem(KEY);state.step=0;state.answers={days:['Mon','Tue','Wed','Thu','Fri'],time:'07:00'};state.signature=false;state.emailFallback=false;state.authError=false;state.appleSignedIn=false;lastChapter=null;render();}};
+  assertChapters();
+  // Returning from Apple lands mid-flow, so place the runner back on the step
+  // they left before the first paint.
+  const auth=consumeAuthRedirect();
+  if(auth)state.step=steps.findIndex(s=>s.id==='signIn');
   render();
+  if(auth==='ok')checkout();
 })();
