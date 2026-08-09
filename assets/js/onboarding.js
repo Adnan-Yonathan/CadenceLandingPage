@@ -167,10 +167,28 @@
   ];
   // Hands off to Supabase's hosted Apple flow and comes back to this page.
   // `state` is already in localStorage, so the runner returns to this same step.
+  //
+  // Preflighted on purpose. A misconfigured provider does NOT redirect back with
+  // `#error` — Supabase answers the authorize URL with a raw JSON body, so
+  // navigating blindly dumps the runner on a supabase.co error page with no way
+  // back and no sale. Asking first costs one request and keeps them on the page.
   function appleSignIn(){
     save();
+    const btn=document.getElementById('appleBtn');
+    if(btn){btn.disabled=true;btn.textContent='Contacting Apple…';}
     const back=location.origin+location.pathname+location.search;
-    location.assign(AUTHORIZE+'?provider=apple&redirect_to='+encodeURIComponent(back));
+    const url=AUTHORIZE+'?provider=apple&redirect_to='+encodeURIComponent(back);
+    const go=()=>location.assign(url);
+    fetch(url,{redirect:'manual'}).then(r=>{
+      // A working provider answers 3xx, which `manual` surfaces as an opaque
+      // redirect we deliberately don't follow — the real navigation does that.
+      if(r.type==='opaqueredirect'||r.status===0||(r.status>=300&&r.status<400))return go();
+      return r.json().catch(()=>({})).then(e=>{
+        console.warn('Apple sign-in unavailable:',e&&e.msg||r.status);
+        state.authError=true;save();render();
+      });
+    // A network blip shouldn't block a runner from a provider that works.
+    }).catch(go);
   }
   /// The email claim off the returned access token. Read for its address only —
   /// never for authorisation — so decoding without verifying is safe here: the
