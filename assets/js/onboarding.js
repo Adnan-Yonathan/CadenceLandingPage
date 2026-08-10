@@ -1,6 +1,19 @@
 (function(){
   'use strict';
   const CHECKOUT='https://cadence.superwall.app/';
+  // Promo codes map to their own checkout link, one per discount.
+  //
+  // Superwall's hosted checkout does not set `allow_promotion_codes`, so a
+  // Stripe promotion code typed on their checkout page has nothing to bind to.
+  // Their model is a discounted product behind its own placement, which is what
+  // these links are. Add an entry per discount as the placements are created:
+  //
+  //   FRIEND50: 'https://cadence.superwall.app/friend50',
+  //
+  // Keys are compared upper-cased and trimmed, so the runner's capitalisation
+  // and stray spaces don't decide whether they get their discount.
+  const PROMO_LINKS={};
+  const promoLink=code=>PROMO_LINKS[String(code||'').trim().toUpperCase()]||null;
   const KEY='cadence_web_onboarding_v1';
   // Answers are stashed server-side before checkout so the app can skip
   // re-asking thirty questions. Publishable key only — this file is public.
@@ -87,7 +100,7 @@
     // prime all moved into the app: the web funnel can't set an alarm or grant
     // a notification permission, so asking here spent the runner's patience on
     // answers the app has to collect again anyway.
-    ['reveal',['how','ring','shoe','run','unlock','identity','spillover','invest','commit','signIn']],
+    ['reveal',['how','ring','shoe','run','unlock','identity','spillover','invest','commit','signIn','promo']],
   ];
   const chapterOf=id=>{const c=CHAPTERS.find(c=>c[1].indexOf(id)>=0);return c?c[0]:'reveal';};
   // A step that slips into the wrong chapter silently produces a bar that jumps
@@ -164,6 +177,13 @@
       {eyebrow:'ONE LAST THING',title:'Save your plan to your account',subtitle:'Sign in once and Cadence unlocks on your phone the moment you pay — with every answer you just gave already in place.'},
       `${state.authError?`<div class="notice">That sign-in didn't finish. Nothing was charged and your answers are safe — tap to try again.</div>`:''}<div class="how">${howRow(svg(ICON.doc,''),'Your plan carries over',"The thirty questions you just answered are waiting in the app.")}${howRow(svg(ICON.refresh,''),'Nothing to dig out of your inbox','Signing in on your phone is what unlocks it — no activation link to lose.')}</div>`,
       `<button class="apple" id="appleBtn">${svg(APPLE,'')}<span>${state.authError?'Try Sign in with Apple again':'Sign in with Apple'}</span></button>`)},
+    // Sits between sign-in and checkout, where someone holding a code expects to
+    // be asked for it. Skippable and never blocking: an unrecognised code shows
+    // an inline error, and continuing without one goes to full price.
+    {id:'promo',render:()=>scaffold(
+      {eyebrow:'DISCOUNT',title:'Have a promo code?',subtitle:'Enter it now and your discount is applied at checkout. No code is fine — skip straight through.'},
+      `${state.promoError?`<div class="notice">We don't recognise that code. Check it and try again, or skip — you can still subscribe at the normal price.</div>`:''}<input class="input" id="promoInput" value="${esc(state.answers.promo)}" placeholder="CADENCE20" maxlength="40" autocapitalize="characters" autocomplete="off" spellcheck="false">`,
+      button('Apply and continue','promoNext')+`<button class="linkbtn" id="promoSkip">I don't have a code</button>`)},
   ];
   // Hands off to Supabase's hosted Apple flow and comes back to this page.
   // `state` is already in localStorage, so the runner returns to this same step.
@@ -244,14 +264,20 @@
     }).then(r=>r.ok?r.json():null).then(d=>(d&&d.id)||null).catch(()=>null).finally(()=>clearTimeout(timer));
   }
   function checkout(){
-    const btn=document.getElementById('appleBtn');
+    const btn=document.getElementById('appleBtn')||document.getElementById('promoNext');
     if(btn){btn.disabled=true;btn.textContent='Saving your plan…';}
+    const skip=document.getElementById('promoSkip');if(skip)skip.remove();
     stash().then(id=>{
-      const url=new URL(CHECKOUT),incoming=new URLSearchParams(location.search);
+      // A valid code sends them to that discount's own checkout, not the
+      // standard one. An unrecognised code falls through to full price rather
+      // than blocking the sale.
+      const base=promoLink(state.answers.promo)||CHECKOUT;
+      const url=new URL(base),incoming=new URLSearchParams(location.search);
       incoming.forEach((v,k)=>url.searchParams.set(k,v));
       url.searchParams.set('name',state.answers.name||'');
       url.searchParams.set('email',state.answers.email||'');
       url.searchParams.set('onboarding','complete');
+      if(state.answers.promo)url.searchParams.set('promo',state.answers.promo);
       // Fast path for the app: if Superwall preserves this through redemption,
       // the claim skips the email lookup entirely.
       if(id)url.searchParams.set('onb',id);
@@ -288,6 +314,22 @@
     // someone who already paid must not have to walk thirty steps to say so.
     const have=document.getElementById('haveMembership');if(have)have.onclick=()=>location.assign('manage-subscription.html');
     const apple=document.getElementById('appleBtn');if(apple)apple.onclick=appleSignIn;
+    // Promo entry. Applying an unknown code is a correctable mistake, not a
+    // dead end — it re-renders with a notice and the runner can skip past it.
+    const pi=document.getElementById('promoInput'),pn=document.getElementById('promoNext'),ps=document.getElementById('promoSkip');
+    if(pi){
+      pi.focus();
+      pi.oninput=()=>{state.answers.promo=pi.value.trim();state.promoError=false;save();};
+      const apply=()=>{
+        const code=(pi.value||'').trim();
+        if(!code){state.answers.promo='';save();return checkout();}
+        if(!promoLink(code)){state.promoError=true;state.answers.promo=code;save();render();return;}
+        state.answers.promo=code;state.promoError=false;save();checkout();
+      };
+      pn.onclick=apply;
+      pi.onkeydown=e=>{if(e.key==='Enter')apply();};
+      if(ps)ps.onclick=()=>{state.answers.promo='';state.promoError=false;save();checkout();};
+    }
     // The payoff beat: the grid opens a moment after the screen lands, so the
     // runner watches the shield lift rather than arriving after it already has.
     const unlockMock=document.getElementById('unlockMock');
@@ -320,12 +362,19 @@
   }
   function render(){clearTimeout(autoTimer);clearTimeout(mockTimer);state.step=Math.max(0,Math.min(state.step,steps.length-1));const step=steps[state.step];syncChapterBar();back.disabled=state.step===0;screen.innerHTML=step.render();wire();if(step.auto)autoTimer=setTimeout(next,step.auto);window.scrollTo(0,0);}
   back.onclick=()=>{if(state.step>0){state.step--;save();render();}};
-  restart.onclick=()=>{if(confirm('Restart Cadence onboarding?')){localStorage.removeItem(KEY);state.step=0;state.answers={};state.signature=false;state.authError=false;state.appleSignedIn=false;lastChapter=null;render();}};
+  restart.onclick=()=>{if(confirm('Restart Cadence onboarding?')){localStorage.removeItem(KEY);state.step=0;state.answers={};state.signature=false;state.authError=false;state.appleSignedIn=false;state.promoError=false;lastChapter=null;render();}};
   assertChapters();
   // Returning from Apple lands mid-flow, so place the runner back on the step
   // they left before the first paint.
   const auth=consumeAuthRedirect();
-  if(auth)state.step=steps.findIndex(s=>s.id==='signIn');
+  if(auth)state.step=steps.findIndex(s=>s.id===(auth==='ok'?'promo':'signIn'));
+  // A paywall "Redeem code" tap arrives as ?promo=1 and jumps straight here.
+  // Deliberately not gated on having a saved session: `checkout` clears
+  // localStorage once the answers are safely stashed, so by the time anyone is
+  // on the paywall to tap Redeem, their session is already gone. Gating on it
+  // would drop them back at question one.
+  if(!auth&&new URLSearchParams(location.search).get('promo')){
+    state.step=steps.findIndex(s=>s.id==='promo');
+  }
   render();
-  if(auth==='ok')checkout();
 })();
