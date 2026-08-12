@@ -1,0 +1,19 @@
+name = "cadence-stripe-posthog"
+main = "src/stripe-posthog.js"
+compatibility_date = "2026-08-01"
+
+# Served from workers.dev, not the apex domain. cadencerun.app resolves straight
+# to GitHub Pages with Cloudflare proxying off, and a Workers route only runs on
+# a proxied record — an apex route deploys cleanly and then silently never
+# fires. Stripe does not care what the hostname is, so this avoids putting
+# Cloudflare in front of the live site just to receive a webhook.
+workers_dev = true
+
+# The PostHog project key is write-only and already ships in the browser
+# bundle, so it lives here rather than in the secret store.
+[vars]
+POSTHOG_HOST = "https://us.i.posthog.com"
+POSTHOG_KEY = "phc_pcHpeonjW8rkPZghWeBP34s8wofjH4qvKK6xeTwAGVGa"
+
+# STRIPE_WEBHOOK_SECRET is a real secret and is NOT set here. Set it with:
+#   wrangler secret put STRIPE_WEBHOOK_SECRET

@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/onboarding.css">
+  <!-- Not deferred: onboarding.js calls cadenceTrack on its first render, so
+       the campaign super properties have to be registered before then. -->
+  <script src="assets/js/attribution.js"></script>
 </head>
 <body>
   <main class="app" id="app" aria-live="polite">

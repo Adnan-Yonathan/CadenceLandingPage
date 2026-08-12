@@ -7,3 +7,13 @@ images/IMG_*.png
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Local Worker secrets — never committed
+worker/.dev.vars
+worker/.cf-token
+
+# Tooling installed outside this project's scope
+.agents/
+.claude/
+skills-lock.json
+worker/.wrangler/

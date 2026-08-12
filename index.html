@@ -42,6 +42,24 @@
   })();
 </script>
 
+<!-- Deliberately after the mobile redirect. A phone never executes this: it has
+     already been sent to onboarding.html, which loads the same file and records
+     the visit there. Loading it above the redirect would double-count every
+     mobile arrival as both a landing view and an onboarding start. -->
+<script src="assets/js/attribution.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (window.cadenceTrack) window.cadenceTrack('web_landing_view');
+    // Which CTA earned the tap, alongside the campaign that delivered the
+    // visitor — the desktop page's only conversion is a walk to the App Store.
+    document.querySelectorAll('a[href*="apps.apple.com"]').forEach(function (a, i) {
+      a.addEventListener('click', function () {
+        if (window.cadenceTrack) window.cadenceTrack('web_app_store_click', { position: i === 0 ? 'nav' : 'body' });
+      });
+    });
+  });
+</script>
+
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cadence — The running coach that keeps you accountable">
 <meta property="og:description" content="Set a run alarm, prove you laced up, and earn your apps back by completing a real outdoor run.">

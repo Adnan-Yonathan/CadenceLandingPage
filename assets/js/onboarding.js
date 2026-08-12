@@ -274,6 +274,13 @@
       const base=promoLink(state.answers.promo)||CHECKOUT;
       const url=new URL(base),incoming=new URLSearchParams(location.search);
       incoming.forEach((v,k)=>url.searchParams.set(k,v));
+      // Top up from the remembered campaign. A runner who lands on a tracked
+      // link, closes the tab, and returns by typing the domain arrives with an
+      // empty query string — without this, Superwall would record their sale as
+      // organic even though a campaign paid for it. Incoming params still win:
+      // the link they actually clicked today is the better answer.
+      const remembered=window.cadenceAttribution?window.cadenceAttribution().last:{};
+      Object.keys(remembered||{}).forEach(k=>{if(!url.searchParams.get(k))url.searchParams.set(k,remembered[k]);});
       url.searchParams.set('name',state.answers.name||'');
       url.searchParams.set('email',state.answers.email||'');
       url.searchParams.set('onboarding','complete');
@@ -284,6 +291,18 @@
       // Only forget the answers once they are safely stored somewhere else.
       // Clearing unconditionally is what used to make the loss permanent.
       if(id)localStorage.removeItem(KEY);
+      // The last event of the web funnel, and the one every campaign is
+      // ultimately judged on. Identify first so this step and every one before
+      // it belong to one person in PostHog before the visitor leaves the site.
+      if(window.cadenceIdentify)window.cadenceIdentify();
+      // Hand PostHog's visitor id to Superwall. Superwall copies `app_user_id`
+      // into Stripe's `client_reference_id` and into subscription metadata as
+      // `_sw_app_user_id`, so the trial and the charge come back to the Worker
+      // carrying this exact id — which is how a link is followed all the way to
+      // a payment without collecting an email or matching a name.
+      const visitor=window.cadenceVisitorId?window.cadenceVisitorId():'';
+      if(visitor)url.searchParams.set('app_user_id',visitor);
+      if(window.cadenceTrack)window.cadenceTrack('web_checkout_started',{stashed:!!id,promo:state.answers.promo||''});
       location.assign(url.toString());
     });
   }
@@ -360,7 +379,19 @@
       fill.style.width=target;
     }
   }
-  function render(){clearTimeout(autoTimer);clearTimeout(mockTimer);state.step=Math.max(0,Math.min(state.step,steps.length-1));const step=steps[state.step];syncChapterBar();back.disabled=state.step===0;screen.innerHTML=step.render();wire();if(step.auto)autoTimer=setTimeout(next,step.auto);window.scrollTo(0,0);}
+  // One event per step reached, at most once per page load. The funnel in
+  // PostHog is these events in order, broken down by `utm_source` — which
+  // attribution.js has already registered as a super property on every capture,
+  // so a step event carries the campaign that produced it without being told.
+  // Re-renders (the Apple return leg, a rejected promo code) must not inflate a
+  // step's count, hence the seen set.
+  const seenSteps={};
+  function trackStep(id){
+    if(seenSteps[id]||!window.cadenceTrack)return;
+    seenSteps[id]=true;
+    window.cadenceTrack('web_onboarding_step',{step:id,index:state.step,chapter:chapterOf(id)});
+  }
+  function render(){clearTimeout(autoTimer);clearTimeout(mockTimer);state.step=Math.max(0,Math.min(state.step,steps.length-1));const step=steps[state.step];syncChapterBar();back.disabled=state.step===0;screen.innerHTML=step.render();wire();trackStep(step.id);if(step.auto)autoTimer=setTimeout(next,step.auto);window.scrollTo(0,0);}
   back.onclick=()=>{if(state.step>0){state.step--;save();render();}};
   restart.onclick=()=>{if(confirm('Restart Cadence onboarding?')){localStorage.removeItem(KEY);state.step=0;state.answers={};state.signature=false;state.authError=false;state.appleSignedIn=false;state.promoError=false;lastChapter=null;render();}};
   assertChapters();

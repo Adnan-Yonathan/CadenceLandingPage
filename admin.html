@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- The page is served from a public static host, so it must never be indexed
+     and must never contain a credential. Link building is harmless and runs
+     entirely offline; the stats side is gated behind a token the operator
+     pastes in, which lives in this browser and nowhere in the source. -->
+<meta name="robots" content="noindex,nofollow">
+<title>Cadence — Campaign links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f1f0e4;--sage:#94a894;--dim:#6f8570;--lime:#a3d13a;--amber:#e6b23a;--danger:#df5b4e;--card:#1e3320;--raised:#24401f;--deep:#0f1c12;--line:rgba(241,240,228,.12)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(120% 60% at 50% -10%,#2e4820 0,var(--deep) 62%,#09120b 100%);color:var(--cream);font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:34px 20px 80px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:30px;letter-spacing:-.04em;margin:0}
+h1 .accent{color:var(--lime)}
+.lede{color:var(--sage);font-size:14px;line-height:1.55;margin:6px 0 26px;max-width:640px}
+.card{background:linear-gradient(145deg,var(--raised),var(--card));border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:18px}
+h2{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);margin:0 0 16px}
+label{display:block;font-size:12px;font-weight:700;color:var(--sage);margin:0 0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+input,select{width:100%;border:1.5px solid var(--line);border-radius:13px;background:rgba(0,0,0,.25);color:var(--cream);padding:12px 14px;font:inherit;font-size:15px;font-weight:600;outline:none}
+input:focus,select:focus{border-color:var(--lime)}
+input::placeholder{color:var(--dim)}
+.hint{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.45}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:800;cursor:pointer}
+.primary{background:var(--lime);color:#10200c}
+.primary:disabled{opacity:.35;cursor:not-allowed}
+.ghost{background:transparent;color:var(--sage);border:1px solid var(--line)}
+.danger{background:transparent;color:var(--danger);border:1px solid rgba(223,91,78,.3);padding:8px 14px;font-size:12px}
+.out{margin-top:16px;display:none}
+.out.on{display:block}
+.url{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.3);border:1px solid rgba(163,209,58,.3);border-radius:13px;padding:12px 14px;overflow-x:auto}
+.url code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--lime);white-space:nowrap}
+.links{display:grid;gap:12px}
+.link{border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(0,0,0,.18)}
+.link-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-size:15px;font-weight:800}
+.meta{font-size:11px;color:var(--dim);margin-left:auto}
+.link code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--sage);margin:9px 0 0;word-break:break-all;line-height:1.5}
+.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.stat{background:var(--raised);border-radius:12px;padding:11px 8px;text-align:center}
+.stat strong{display:block;font-size:22px;color:var(--lime);line-height:1.1}
+.stat span{display:block;font-size:9px;color:var(--sage);margin-top:4px;letter-spacing:.04em;text-transform:uppercase}
+.stat.drop strong{color:var(--amber)}
+.empty{color:var(--dim);font-size:13px;text-align:center;padding:22px 0}
+.note{font-size:12px;line-height:1.6;color:var(--sage);background:rgba(163,209,58,.07);border:1px solid rgba(163,209,58,.2);border-radius:13px;padding:13px 15px;margin-top:14px}
+.note.warn{background:rgba(230,178,58,.08);border-color:rgba(230,178,58,.25);color:#e8cf95}
+.status{font-size:12px;color:var(--dim);margin-top:10px;min-height:16px}
+.status.err{color:var(--danger)}
+@media(max-width:640px){.funnel{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Campaign <span class="accent">links</span></h1>
+    <a href="index.html" style="color:var(--sage);font-size:13px;font-weight:700">← site</a>
+  </header>
+  <p class="lede">Every link is tracked by its <code style="color:var(--lime)">ref</code>. Nothing needs registering — a
+  link works the moment it exists, and the funnel below is counted from PostHog by that same tag.</p>
+
+  <section class="card">
+    <h2>Build a link</h2>
+    <div class="grid">
+      <div>
+        <label for="ref">Tag <span style="color:var(--danger)">*</span></label>
+        <input id="ref" placeholder="tiktok_bio" autocomplete="off">
+        <p class="hint">Letters, numbers, <code>_</code> <code>-</code> <code>.</code> only. This is the name you'll see in every report.</p>
+      </div>
+      <div>
+        <label for="dest">Lands on</label>
+        <select id="dest">
+          <option value="/">Landing page</option>
+          <option value="/onboarding.html">Onboarding directly</option>
+        </select>
+        <p class="hint">Phones are redirected to onboarding either way.</p>
+      </div>
+      <div>
+        <label for="medium">Placement <span style="color:var(--dim)">(optional)</span></label>
+        <input id="medium" placeholder="bio, story, comment" autocomplete="off">
+      </div>
+      <div>
+        <label for="campaign">Campaign <span style="color:var(--dim)">(optional)</span></label>
+        <input id="campaign" placeholder="aug26_morning" autocomplete="off">
+      </div>
+    </div>
+    <div class="row">
+      <button class="primary" id="make">Generate</button>
+      <button class="ghost" id="clear">Clear</button>
+    </div>
+    <div class="out" id="out">
+      <div class="url"><code id="url"></code></div>
+      <div class="row">
+        <button class="primary" id="copy">Copy</button>
+        <button class="ghost" id="save">Save to list</button>
+        <button class="ghost" id="open">Open</button>
+      </div>
+      <div class="status" id="built-status"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Tracking</h2>
+    <div class="grid">
+      <div>
+        <label for="token">Admin token</label>
+        <input id="token" type="password" placeholder="paste to load stats" autocomplete="off">
+        <p class="hint">Stored in this browser only. Never in the page source.</p>
+      </div>
+      <div>
+        <label for="days">Window</label>
+        <select id="days">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <button class="primary" id="refresh">Load stats</button>
+    </div>
+    <div class="status" id="stats-status"></div>
+  </section>
+
+  <section class="card">
+    <h2>Your links</h2>
+    <div class="links" id="list"></div>
+    <div class="empty" id="empty">No links saved yet. Build one above.</div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Where the site actually lives. Links must be built against the real domain
+  // even when this page is opened from localhost during setup, or every link
+  // generated while testing would point somewhere that does not exist.
+  var SITE = 'https://cadencerun.app';
+  var WORKER = 'https://cadence-stripe-posthog.cadencerunningsupport.workers.dev';
+  var STORE = 'cadence_admin_links_v1';
+  var TOKEN_STORE = 'cadence_admin_token_v1';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var built = null;
+
+  function clean(v) { return String(v || '').trim(); }
+  function validRef(v) { return /^[A-Za-z0-9_.-]{1,64}$/.test(v); }
+
+  function build() {
+    var ref = clean($('ref').value);
+    if (!validRef(ref)) {
+      say('built-status', 'Tag must be 1–64 characters: letters, numbers, _ - . only.', true);
+      return null;
+    }
+    var u = new URL(SITE + $('dest').value);
+    u.searchParams.set('ref', ref);
+    // utm_source is filled from `ref` by attribution.js, so setting it here
+    // would only duplicate it. Medium and campaign have no such shorthand.
+    var medium = clean($('medium').value);
+    var campaign = clean($('campaign').value);
+    if (medium) u.searchParams.set('utm_medium', medium);
+    if (campaign) u.searchParams.set('utm_campaign', campaign);
+    return { ref: ref, url: u.toString(), created: Date.now() };
+  }
+
+  function say(id, msg, isErr) {
+    var el = $(id);
+    el.textContent = msg || '';
+    el.className = 'status' + (isErr ? ' err' : '');
+  }
+
+  $('make').onclick = function () {
+    built = build();
+    if (!built) return;
+    $('url').textContent = built.url;
+    $('out').classList.add('on');
+    say('built-status', '');
+  };
+
+  $('clear').onclick = function () {
+    ['ref', 'medium', 'campaign'].forEach(function (i) { $(i).value = ''; });
+    $('out').classList.remove('on');
+    built = null;
+  };
+
+  $('copy').onclick = function () {
+    if (!built) return;
+    navigator.clipboard.writeText(built.url).then(
+      function () { say('built-status', 'Copied.'); },
+      function () { say('built-status', 'Copy failed — select the text above.', true); }
+    );
+  };
+
+  $('open').onclick = function () {
+    if (built) window.open(built.url, '_blank', 'noopener');
+  };
+
+  $('save').onclick = function () {
+    if (!built) return;
+    var all = load();
+    // Re-saving a tag replaces it rather than stacking duplicates, since the
+    // tag is the identity — two entries with one tag would report one number
+    // twice and read as double the traffic.
+    all = all.filter(function (l) { return l.ref !== built.ref; });
+    all.unshift(built);
+    localStorage.setItem(STORE, JSON.stringify(all));
+    say('built-status', 'Saved.');
+    render();
+  };
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch (e) { return []; }
+  }
+
+  function fmtDate(ts) {
+    try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch (e) { return ''; }
+  }
+
+  function render() {
+    var all = load();
+    var list = $('list');
+    list.innerHTML = '';
+    $('empty').style.display = all.length ? 'none' : 'block';
+
+    all.forEach(function (l) {
+      var el = document.createElement('div');
+      el.className = 'link';
+      el.innerHTML =
+        '<div class="link-head"><span class="tag">' + esc(l.ref) + '</span>' +
+        '<span class="meta">' + fmtDate(l.created) + '</span></div>' +
+        '<code>' + esc(l.url) + '</code>' +
+        '<div class="funnel" data-funnel="' + esc(l.ref) + '">' + blanks() + '</div>' +
+        '<div class="row"><button class="ghost copy-one">Copy</button>' +
+        '<button class="danger del">Remove</button></div>';
+      el.querySelector('.copy-one').onclick = function () { navigator.clipboard.writeText(l.url); };
+      el.querySelector('.del').onclick = function () {
+        var kept = load().filter(function (x) { return x.ref !== l.ref; });
+        localStorage.setItem(STORE, JSON.stringify(kept));
+        render();
+      };
+      list.appendChild(el);
+    });
+  }
+
+  var STEPS = [
+    ['landing_views', 'Clicks'],
+    ['onboarding_starts', 'Started'],
+    ['reached_checkout', 'Checkout'],
+    ['trials', 'Trial'],
+    ['paid', 'Paid']
+  ];
+
+  function blanks() {
+    return STEPS.map(function (s) {
+      return '<div class="stat"><strong>–</strong><span>' + s[1] + '</span></div>';
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // Stats are fetched per link rather than in one call. There is no batch
+  // endpoint, and a handful of links is few enough that the simplicity is worth
+  // more than the round trips.
+  function loadStats() {
+    var token = clean($('token').value);
+    if (!token) { say('stats-status', 'Paste the admin token first.', true); return; }
+    localStorage.setItem(TOKEN_STORE, token);
+
+    var all = load();
+    if (!all.length) { say('stats-status', 'No saved links to report on.'); return; }
+
+    var days = $('days').value;
+    say('stats-status', 'Loading…');
+
+    Promise.all(all.map(function (l) {
+      return fetch(WORKER + '/stats?ref=' + encodeURIComponent(l.ref) + '&days=' + days, {
+        headers: { Authorization: 'Bearer ' + token }
+      }).then(function (r) {
+        return r.json().then(function (b) { return { ok: r.ok, body: b, ref: l.ref }; });
+      }).catch(function () {
+        return { ok: false, body: { error: 'network' }, ref: l.ref };
+      });
+    })).then(function (results) {
+      var failed = results.filter(function (r) { return !r.ok; });
+      results.forEach(function (r) {
+        var box = document.querySelector('[data-funnel="' + CSS.escape(r.ref) + '"]');
+        if (!box || !r.ok) return;
+        var f = r.body.funnel || {};
+        box.innerHTML = STEPS.map(function (s) {
+          var v = f[s[0]] || 0;
+          // The paid column is the one worth staring at, so it is coloured
+          // differently when a trial never converted.
+          var drop = s[0] === 'paid' && (f.trials || 0) > 0 && v === 0;
+          return '<div class="stat' + (drop ? ' drop' : '') + '"><strong>' + v + '</strong><span>' + s[1] + '</span></div>';
+        }).join('');
+      });
+      if (failed.length) {
+        say('stats-status', failed[0].body.error === 'unauthorized'
+          ? 'Token rejected.'
+          : ('Could not load: ' + (failed[0].body.error || 'unknown')), true);
+      } else {
+        say('stats-status', 'Updated ' + new Date().toLocaleTimeString() + '.');
+      }
+    });
+  }
+
+  $('refresh').onclick = loadStats;
+  $('token').value = localStorage.getItem(TOKEN_STORE) || '';
+  render();
+})();
+</script>
+</body>
+</html>
