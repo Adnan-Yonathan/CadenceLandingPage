@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- The page is served from a public static host, so it must never be indexed
-     and must never contain a credential. Link building is harmless and runs
-     entirely offline; the stats side is gated behind a token the operator
-     pastes in, which lives in this browser and nowhere in the source. -->
+<!-- Served from a public static host, marked noindex, and containing no
+     credential of any kind. Link building runs entirely in the browser.
+     The stats it reads are unauthenticated by choice — see the Worker's
+     /stats handler — so what anyone finding this page can learn is five
+     counts per tag, never the PostHog key that produced them. -->
 <meta name="robots" content="noindex,nofollow">
 <title>Cadence — Campaign links</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,10 +80,11 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
       <div>
         <label for="dest">Lands on</label>
         <select id="dest">
+          <option value="/get">Straight to the App Store — for bios</option>
           <option value="/">Landing page</option>
           <option value="/onboarding.html">Onboarding directly</option>
         </select>
-        <p class="hint">Phones are redirected to onboarding either way.</p>
+        <p class="hint" id="dest-hint">Handles Instagram's browser, which can't open the App Store on its own.</p>
       </div>
       <div>
         <label for="medium">Placement <span style="color:var(--dim)">(optional)</span></label>
@@ -109,32 +111,18 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
   </section>
 
   <section class="card">
-    <h2>Tracking</h2>
-    <div class="grid">
-      <div>
-        <label for="token">Admin token</label>
-        <input id="token" type="password" placeholder="paste to load stats" autocomplete="off">
-        <p class="hint">Stored in this browser only. Never in the page source.</p>
-      </div>
-      <div>
-        <label for="days">Window</label>
-        <select id="days">
-          <option value="7">Last 7 days</option>
-          <option value="30" selected>Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
-      </div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+      <h2 style="margin:0">Your links</h2>
+      <select id="days" style="width:auto;margin-left:auto;padding:8px 12px;font-size:13px">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <button class="ghost" id="refresh" style="padding:8px 16px;font-size:13px">Refresh</button>
     </div>
-    <div class="row">
-      <button class="primary" id="refresh">Load stats</button>
-    </div>
-    <div class="status" id="stats-status"></div>
-  </section>
-
-  <section class="card">
-    <h2>Your links</h2>
     <div class="links" id="list"></div>
     <div class="empty" id="empty">No links saved yet. Build one above.</div>
+    <div class="status" id="stats-status"></div>
   </section>
 
 </div>
@@ -149,7 +137,6 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
   var SITE = 'https://cadencerun.app';
   var WORKER = 'https://cadence-stripe-posthog.cadencerunningsupport.workers.dev';
   var STORE = 'cadence_admin_links_v1';
-  var TOKEN_STORE = 'cadence_admin_token_v1';
 
   var $ = function (id) { return document.getElementById(id); };
   var built = null;
@@ -215,8 +202,11 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     all = all.filter(function (l) { return l.ref !== built.ref; });
     all.unshift(built);
     localStorage.setItem(STORE, JSON.stringify(all));
-    say('built-status', 'Saved.');
+    say('built-status', 'Saved — its numbers are below.');
     render();
+    // A link saved is a link the operator wants to watch, so it arrives with
+    // its counts already filled in rather than five dashes and a button.
+    loadStats();
   };
 
   function load() {
@@ -246,9 +236,14 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
         '<button class="danger del">Remove</button></div>';
       el.querySelector('.copy-one').onclick = function () { navigator.clipboard.writeText(l.url); };
       el.querySelector('.del').onclick = function () {
+        // Removing a link removes it from this list only. The tag keeps
+        // working and PostHog keeps counting it — anything already printed on
+        // a flyer does not stop being tracked because a row was tidied away.
+        if (!confirm('Remove "' + l.ref + '" from this list?\n\nThe link keeps working and its data is kept in PostHog.')) return;
         var kept = load().filter(function (x) { return x.ref !== l.ref; });
         localStorage.setItem(STORE, JSON.stringify(kept));
         render();
+        loadStats();
       };
       list.appendChild(el);
     });
@@ -282,20 +277,14 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
   // endpoint, and a handful of links is few enough that the simplicity is worth
   // more than the round trips.
   function loadStats() {
-    var token = clean($('token').value);
-    if (!token) { say('stats-status', 'Paste the admin token first.', true); return; }
-    localStorage.setItem(TOKEN_STORE, token);
-
     var all = load();
-    if (!all.length) { say('stats-status', 'No saved links to report on.'); return; }
+    if (!all.length) { say('stats-status', ''); return; }
 
     var days = $('days').value;
     say('stats-status', 'Loading…');
 
     Promise.all(all.map(function (l) {
-      return fetch(WORKER + '/stats?ref=' + encodeURIComponent(l.ref) + '&days=' + days, {
-        headers: { Authorization: 'Bearer ' + token }
-      }).then(function (r) {
+      return fetch(WORKER + '/stats?ref=' + encodeURIComponent(l.ref) + '&days=' + days).then(function (r) {
         return r.json().then(function (b) { return { ok: r.ok, body: b, ref: l.ref }; });
       }).catch(function () {
         return { ok: false, body: { error: 'network' }, ref: l.ref };
@@ -315,18 +304,31 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
         }).join('');
       });
       if (failed.length) {
-        say('stats-status', failed[0].body.error === 'unauthorized'
-          ? 'Token rejected.'
-          : ('Could not load: ' + (failed[0].body.error || 'unknown')), true);
+        say('stats-status', 'Could not load: ' + (failed[0].body.error || 'unknown'), true);
       } else {
-        say('stats-status', 'Updated ' + new Date().toLocaleTimeString() + '.');
+        say('stats-status', 'Updated ' + new Date().toLocaleTimeString() +
+          ' · PostHog takes a few minutes to count a fresh click.');
       }
     });
   }
 
   $('refresh').onclick = loadStats;
-  $('token').value = localStorage.getItem(TOKEN_STORE) || '';
+  $('days').onchange = loadStats;
+
+  // The destination decides what the numbers can possibly show, so the hint
+  // changes with it: a bio link never reaches onboarding, and reading its zeros
+  // as a drop-off would be wrong.
+  $('dest').onchange = function () {
+    var hints = {
+      '/get': "Handles Instagram's browser, which can't open the App Store on its own.",
+      '/': 'Phones are redirected to onboarding either way.',
+      '/onboarding.html': 'Skips the pitch and opens the flow directly.'
+    };
+    $('dest-hint').textContent = hints[this.value] || '';
+  };
+
   render();
+  loadStats();
 })();
 </script>
 </body>

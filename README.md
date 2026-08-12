@@ -180,24 +180,36 @@ comma-separated secrets.
 
 ### The admin page
 
-`admin.html` builds campaign links and shows the funnel for each one. It is
-served from the public static host, so it is marked `noindex` and contains no
-credential of any kind: link building runs entirely in the browser, and the
-stats side is gated behind a token the operator pastes in, held in
-`localStorage`.
+`admin.html` builds campaign links and shows the funnel for each one. Save a
+link and its numbers appear underneath it; remove it and the row goes away
+while the link keeps working, because the tag was never registered anywhere in
+the first place.
 
-Saved links live in `localStorage` too — this is a tool, not a database, and a
-link needs no registering to work. Re-saving a tag replaces the old entry rather
-than stacking a duplicate, since the tag is the identity.
+The default destination is `/get`, the bio link. Landing page and onboarding
+are the other two, and the hint under the selector changes with the choice —
+a bio link cannot reach onboarding, and reading its zeros there as a drop-off
+would be a misreading rather than a finding.
 
-Stats come from `GET /stats?ref=…&days=…` on the Worker, which needs three
+Saved links live in `localStorage`: this is a tool, not a database. Re-saving a
+tag replaces the old entry rather than stacking a duplicate, since the tag is
+the identity.
+
+Stats come from `GET /stats?ref=…&days=…` on the Worker, which needs two
 secrets beyond the webhook ones:
 
 | Secret | Purpose |
 | --- | --- |
-| `ADMIN_TOKEN` | bearer token the admin page sends; anything reachable from a public page has to prove itself |
 | `POSTHOG_PERSONAL_KEY` | personal API key (`phx_…`), scope `query:read` — full project read, which is exactly why it lives here and never in the page |
 | `POSTHOG_PROJECT_ID` | numeric project id |
+
+**`/stats` is unauthenticated.** That is a deliberate trade for a page with no
+login: the numbers load the moment a link is saved, with nothing to paste. What
+it can return is five counts for one tag, and only for a tag someone already
+knows — never the PostHog key that produced them, never anything about a person.
+The origin allowlist in `withCors` keeps other websites from reading it in a
+browser, but it is not a real lock and `curl` ignores it entirely. If these
+numbers ever need to be private, the fix is Cloudflare Access in front of both
+`/admin` and `/stats`, not a token typed into a public page.
 
 The query counts `ref` as an event property OR a person property in one pass,
 because browser events carry it directly while the Stripe events inherit it from

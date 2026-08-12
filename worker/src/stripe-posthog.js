@@ -33,15 +33,19 @@ export default {
     // carries no Authorization header by design, so letting it reach /stats
     // means answering the browser's permission question with 401 — and the
     // browser then refuses to send the real request at all.
+    const origin = request.headers.get('Origin') || '';
+
     if (request.method === 'OPTIONS') {
-      return withCors(new Response(null, { status: 204 }));
+      return withCors(new Response(null, { status: 204 }), origin);
     }
 
     // The admin page's read side. Kept on this Worker rather than in the page
     // because answering it needs a PostHog PERSONAL api key — full read access
-    // to the project — which must never be shipped to a browser.
+    // to the project — which must never be shipped to a browser. That reason
+    // still holds even though the endpoint itself is now unauthenticated: what
+    // it returns is five counts for one tag, not the key that produced them.
     if (url.pathname === '/stats') {
-      return withCors(await stats(url, request, env));
+      return withCors(await stats(url, env), origin);
     }
 
     if (request.method !== 'POST') {
@@ -105,10 +109,22 @@ export default {
 // Admin stats
 // ---------------------------------------------------------------------------
 
-function withCors(res) {
+// The admin page carries no credential, so the origin allowlist is the only
+// thing standing between this endpoint and every other site on the internet.
+// It is a weak lock — curl ignores CORS entirely — but it does stop a page the
+// operator did not write from reading these numbers in their browser.
+const ALLOWED_ORIGINS = [
+  'https://cadencerun.app',
+  'http://localhost:4173'
+];
+
+function withCors(res, origin) {
   const h = new Headers(res.headers);
-  h.set('Access-Control-Allow-Origin', '*');
-  h.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+    h.set('Access-Control-Allow-Origin', origin);
+    h.set('Vary', 'Origin');
+  }
+  h.set('Access-Control-Allow-Headers', 'Content-Type');
   h.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   return new Response(res.body, { status: res.status, headers: h });
 }
@@ -126,16 +142,7 @@ function json(body, status) {
 // event property on everything the browser fires, and as a person property on
 // the Stripe events, which inherit it from the person rather than carrying it.
 // Both are checked, which is what makes one number per step possible at all.
-async function stats(url, request, env) {
-  if (!env.ADMIN_TOKEN) return json({ error: 'stats not configured: ADMIN_TOKEN unset' }, 503);
-
-  // The page is public — anything it can reach must carry its own proof.
-  const auth = request.headers.get('Authorization') || '';
-  const token = auth.replace(/^Bearer\s+/i, '').trim();
-  if (!token || !timingSafeEqual(token, env.ADMIN_TOKEN)) {
-    return json({ error: 'unauthorized' }, 401);
-  }
-
+async function stats(url, env) {
   const ref = (url.searchParams.get('ref') || '').trim();
   // Whitelist rather than escape. The ref is interpolated into a query, and the
   // set of characters a link tag ever legitimately needs is small enough that
