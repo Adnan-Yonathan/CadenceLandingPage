@@ -106,7 +106,7 @@ Events:
 
 | Event | Fired when |
 | --- | --- |
-| `web_landing_view` | the desktop page renders (mobile redirects before this) |
+| `web_landing_view` | the desktop page renders (a phone redirects before this, and is counted on `get.html` instead) |
 | `web_app_store_click` | an App Store link is clicked; `position` is `nav`, `hero`, `final` or `footer`, read from `data-cta` on the link rather than its index, so reordering the page cannot silently relabel a CTA |
 | `web_onboarding_step` | each step is first reached, with `step`, `index`, `chapter` |
 | `web_checkout_started` | the hand-off to Superwall, after `identify` by email |
@@ -235,8 +235,18 @@ button. Visibility at fire time is the signal, deliberately not `pagehide`,
 which reports an unloading document rather than a successful handoff and would
 suppress the sheet in the very case that needs it.
 
-`get.html` is the URL to put in a bio: `cadencerun.app/get?ref=…`. It has two
-jobs depending on who opens it.
+`get.html` is the URL to put in a bio: `cadencerun.app/get?ref=…`, and it is
+also where the landing page sends every phone. A visitor who tapped a link on a
+phone is already sold enough to tap, and cannot install anything from the pitch
+anyway; the desktop page keeps the pitch because a desktop visitor has nowhere
+else to go.
+
+The hop goes through this page rather than straight to `apps.apple.com`,
+because this is the page that knows how to escape Instagram's webview. Sending
+a phone directly to the store would drop every in-app visitor back onto the
+dead link the whole path exists to route around.
+
+It has two jobs depending on who opens it.
 
 In an in-app browser it shows instructions and nothing else — deliberately no
 button, because no button there can work. An arrow points at the top-right

@@ -33,19 +33,28 @@
     var isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
     if (isIOS || isPhoneUA || isInAppBrowser || (w <= 760 && isTouch)) {
-      // Every inbound param rides along: onboarding.js forwards the whole query
-      // string to checkout, so campaign attribution survives the funnel.
-      var onboarding = new URL('onboarding.html', location.href);
-      if (params) onboarding.search = params.toString();
-      location.replace(onboarding.toString());
+      // Phones go to the App Store, not the pitch. Someone who tapped a link
+      // on a phone is already sold enough to tap; the desktop page exists to
+      // persuade, and a phone cannot install anything from it anyway.
+      //
+      // Via get.html rather than the store URL directly, because that page is
+      // what knows how to escape Instagram's webview — sending a phone straight
+      // to apps.apple.com would put every in-app visitor back on the dead link
+      // this whole path exists to route around.
+      //
+      // Every inbound param rides along so the campaign survives the hop.
+      var next = new URL('get.html', location.href);
+      if (params) next.search = params.toString();
+      location.replace(next.toString());
     }
   })();
 </script>
 
 <!-- Deliberately after the mobile redirect. A phone never executes this: it has
-     already been sent to onboarding.html, which loads the same file and records
-     the visit there. Loading it above the redirect would double-count every
-     mobile arrival as both a landing view and an onboarding start. -->
+     already been sent to get.html, which loads the same file and records the
+     visit there. Loading it above the redirect would count every mobile
+     arrival twice — once as a landing view here, once again on the page it was
+     immediately sent to. -->
 <script src="assets/js/attribution.js"></script>
 <!-- After attribution.js: the click handler reports through cadenceTrack, which
      that file defines. -->

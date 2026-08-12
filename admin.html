@@ -84,7 +84,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
           <option value="/">Landing page</option>
           <option value="/onboarding.html">Onboarding directly</option>
         </select>
-        <p class="hint" id="dest-hint">Handles Instagram's browser, which can't open the App Store on its own.</p>
+        <p class="hint" id="dest-hint">Handles Instagram's browser, which can't open the App Store on its own. The landing page sends phones here too.</p>
       </div>
       <div>
         <label for="medium">Placement <span style="color:var(--dim)">(optional)</span></label>
@@ -321,7 +321,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
   $('dest').onchange = function () {
     var hints = {
       '/get': "Handles Instagram's browser, which can't open the App Store on its own.",
-      '/': 'Phones are redirected to onboarding either way.',
+      '/': 'Desktop sees the pitch; phones are sent straight to the App Store.',
       '/onboarding.html': 'Skips the pitch and opens the flow directly.'
     };
     $('dest-hint').textContent = hints[this.value] || '';
