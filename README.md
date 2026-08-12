@@ -223,9 +223,19 @@ button. Visibility at fire time is the signal, deliberately not `pagehide`,
 which reports an unloading document rather than a successful handoff and would
 suppress the sheet in the very case that needs it.
 
-`get.html` is the same logic as a destination, for the one URL a bio gets:
-`cadencerun.app/get?ref=…` tracks the click and attempts the handoff on load,
-with a real anchor as the floor if every script fails.
+`get.html` is the URL to put in a bio: `cadencerun.app/get?ref=…`. It has two
+jobs depending on who opens it.
+
+In an in-app browser it shows instructions and nothing else — deliberately no
+button, because no button there can work. An arrow points at the top-right
+corner where Instagram keeps its `⋯`, and the three steps end on a promise the
+page itself keeps: reopen this in a real browser and the App Store opens on its
+own.
+
+Anywhere else it is a turnstile. It records the click and redirects, after a
+400ms beat so the capture is not cancelled in flight by the navigation, using
+`replace` so the back button returns to Instagram rather than bouncing off a
+page that immediately redirects again.
 
 Events: `web_app_store_click` carries `in_app_browser` (`instagram`,
 `facebook`, `tiktok`, … or `none`); `web_app_store_blocked` fires when the
