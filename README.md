@@ -107,7 +107,7 @@ Events:
 | Event | Fired when |
 | --- | --- |
 | `web_landing_view` | the desktop page renders (mobile redirects before this) |
-| `web_app_store_click` | an App Store link is clicked, with `position` |
+| `web_app_store_click` | an App Store link is clicked; `position` is `nav`, `hero`, `final` or `footer`, read from `data-cta` on the link rather than its index, so reordering the page cannot silently relabel a CTA |
 | `web_onboarding_step` | each step is first reached, with `step`, `index`, `chapter` |
 | `web_checkout_started` | the hand-off to Superwall, after `identify` by email |
 | `trial_started` | Stripe `checkout.session.completed` — from the Worker |
@@ -202,6 +202,35 @@ secrets beyond the webhook ones:
 The query counts `ref` as an event property OR a person property in one pass,
 because browser events carry it directly while the Stripe events inherit it from
 the person.
+
+### Instagram and the App Store
+
+A link opened from an Instagram bio does not run in Safari. It runs in a
+WKWebView Instagram owns, and that webview has no second window:
+`target="_blank"` is ignored and `window.open()` returns null, so the App Store
+badge registers the tap and does nothing. Facebook, TikTok and most other
+in-app browsers behave the same way.
+
+`assets/js/appstore.js` handles it. The escape is not a new window but the
+`itms-apps://` scheme: the webview cannot render it, so iOS hands it to the
+native App Store app. That is a system-level handoff, which is why it clears a
+sandbox `window.open` cannot.
+
+It is not guaranteed — Instagram revises this webview often. So the attempt is
+timed: if the page is still visible 1.5s later, nothing happened, and a sheet
+appears naming the exact control (`⋯` → **Open in browser**) with a copy-link
+button. Visibility at fire time is the signal, deliberately not `pagehide`,
+which reports an unloading document rather than a successful handoff and would
+suppress the sheet in the very case that needs it.
+
+`get.html` is the same logic as a destination, for the one URL a bio gets:
+`cadencerun.app/get?ref=…` tracks the click and attempts the handoff on load,
+with a real anchor as the floor if every script fails.
+
+Events: `web_app_store_click` carries `in_app_browser` (`instagram`,
+`facebook`, `tiktok`, … or `none`); `web_app_store_blocked` fires when the
+fallback sheet is shown, so the rate of genuine breakage is measurable rather
+than guessed at.
 
 ### How a link reaches a payment
 

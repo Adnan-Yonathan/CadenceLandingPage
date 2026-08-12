@@ -47,16 +47,15 @@
      the visit there. Loading it above the redirect would double-count every
      mobile arrival as both a landing view and an onboarding start. -->
 <script src="assets/js/attribution.js"></script>
+<!-- After attribution.js: the click handler reports through cadenceTrack, which
+     that file defines. -->
+<script src="assets/js/appstore.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', function () {
     if (window.cadenceTrack) window.cadenceTrack('web_landing_view');
-    // Which CTA earned the tap, alongside the campaign that delivered the
-    // visitor — the desktop page's only conversion is a walk to the App Store.
-    document.querySelectorAll('a[href*="apps.apple.com"]').forEach(function (a, i) {
-      a.addEventListener('click', function () {
-        if (window.cadenceTrack) window.cadenceTrack('web_app_store_click', { position: i === 0 ? 'nav' : 'body' });
-      });
-    });
+    // App Store taps are tracked and handled by appstore.js, which also carries
+    // the Instagram in-app browser workaround. It binds its own listeners, so
+    // there is nothing to wire here.
   });
 </script>
 
@@ -164,7 +163,7 @@
       <nav class="cad-nav" style="display: flex; align-items: center; gap: 28px;">
         <a href="#features" class="cad-nav-link" style="color: #94a894; font-size: 14px; font-weight: 600;">Features</a>
         <a href="manage-subscription.html" class="cad-nav-link" style="color: #94a894; font-size: 14px; font-weight: 600;">Manage subscription</a>
-        <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener" class="cad-cta-pill" style="display: flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 999px; background: #a3d13a; color: #0f1c12; font-size: 14px; font-weight: 700;">Get Cadence</a>
+        <a data-cta="nav" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener" class="cad-cta-pill" style="display: flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 999px; background: #a3d13a; color: #0f1c12; font-size: 14px; font-weight: 700;">Get Cadence</a>
       </nav>
     </div>
   </header>
@@ -183,7 +182,7 @@
         </p>
 
         <div style="display: flex; align-items: center; gap: 18px; margin-top: 36px; flex-wrap: wrap;">
-          <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
+          <a data-cta="hero" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
             <img src="images/app-store-badge.png" alt="Download on the App Store" style="height: 54px; display: block;">
           </a>
         </div>
@@ -356,7 +355,7 @@
       <h2 style="margin: 0; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.06; letter-spacing: -0.03em; font-weight: 800; color: #f1f0e4;">Tomorrow morning is already decided.</h2>
       <p style="margin: 18px auto 0; max-width: 460px; font-size: 17px; line-height: 1.6; color: #e4e6dc;">Set the alarm tonight. Wake up as the person who goes.</p>
       <div style="display: flex; justify-content: center; margin-top: 32px;">
-        <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
+        <a data-cta="final" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener">
           <img src="images/app-store-badge.png" alt="Download on the App Store" style="height: 54px; display: block;">
         </a>
       </div>
@@ -370,7 +369,7 @@
         Cadence
       </div>
       <nav style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-        <a href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener" class="cad-foot-link" style="color: #94a894; font-size: 14px;">App Store</a>
+        <a data-cta="footer" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833" target="_blank" rel="noopener" class="cad-foot-link" style="color: #94a894; font-size: 14px;">App Store</a>
         <a href="#features" class="cad-foot-link" style="color: #94a894; font-size: 14px;">Features</a>
         <a href="manage-subscription.html" class="cad-foot-link" style="color: #94a894; font-size: 14px;">Manage subscription</a>
         <a href="support.html" class="cad-foot-link" style="color: #94a894; font-size: 14px;">Support</a>

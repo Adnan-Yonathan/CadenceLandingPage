@@ -190,6 +190,11 @@ async function stats(url, request, env) {
     // Named so the admin page does not have to know the event vocabulary.
     funnel: {
       landing_views: counts.web_landing_view || 0,
+      // The App Store walk-out. Not a step between the two either side of it —
+      // it is a separate exit from the landing page, taken by people who never
+      // enter onboarding at all. Reading it as part of a single chain would
+      // imply a drop-off that never happened.
+      app_store_clicks: counts.web_app_store_click || 0,
       onboarding_starts: counts.web_onboarding_step || 0,
       reached_checkout: counts.web_checkout_started || 0,
       trials: counts.trial_started || 0,
