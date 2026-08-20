@@ -43,7 +43,7 @@ export default {
     // because answering it needs a PostHog PERSONAL api key — full read access
     // to the project — which must never be shipped to a browser. That reason
     // still holds even though the endpoint itself is now unauthenticated: what
-    // it returns is five counts for one tag, not the key that produced them.
+    // it returns is four counts for one tag, not the key that produced them.
     if (url.pathname === '/stats') {
       return withCors(await stats(url, env), origin);
     }
@@ -140,8 +140,9 @@ function json(body, status) {
 //
 // `ref` lives in two different places depending on who sent the event: as an
 // event property on everything the browser fires, and as a person property on
-// the Stripe events, which inherit it from the person rather than carrying it.
-// Both are checked, which is what makes one number per step possible at all.
+// the Stripe event, which inherits it from the person rather than carrying it.
+// Keeping those branches event-specific matters: a person's current ref can
+// change, and must not retroactively relabel their earlier browser events.
 async function stats(url, env) {
   const ref = (url.searchParams.get('ref') || '').trim();
   // Whitelist rather than escape. The ref is interpolated into a query, and the
@@ -164,7 +165,13 @@ async function stats(url, env) {
     SELECT event, count() AS c
     FROM events
     WHERE timestamp > now() - INTERVAL ${days} DAY
-      AND (properties.ref = '${ref}' OR person.properties.ref = '${ref}')
+      AND (
+        (
+          event IN ('web_tracking_link_click', 'web_landing_view', 'web_app_store_click', 'web_checkout_started')
+          AND properties.ref = '${ref}'
+        )
+        OR (event = 'trial_started' AND person.properties.ref = '${ref}')
+      )
     GROUP BY event
   `;
 
@@ -196,16 +203,17 @@ async function stats(url, env) {
     counts,
     // Named so the admin page does not have to know the event vocabulary.
     funnel: {
-      landing_views: counts.web_landing_view || 0,
-      // The App Store walk-out. Not a step between the two either side of it —
-      // it is a separate exit from the landing page, taken by people who never
-      // enter onboarding at all. Reading it as part of a single chain would
-      // imply a drop-off that never happened.
-      app_store_clicks: counts.web_app_store_click || 0,
-      onboarding_starts: counts.web_onboarding_step || 0,
-      reached_checkout: counts.web_checkout_started || 0,
-      trials: counts.trial_started || 0,
-      paid: counts.subscription_paid || 0
+      // New links emit one common event on every supported destination. Older
+      // links fall back to the strongest available pre-deployment signal.
+      clicks: counts.web_tracking_link_click || counts.web_landing_view || counts.web_app_store_click || 0,
+      // Apple does not report a confirmed install to this static website, so
+      // "downloads" is the observable handoff into the App Store.
+      downloads: counts.web_app_store_click || 0,
+      paywall_views: counts.web_checkout_started || 0,
+      // checkout.session.completed emits trial_started for every subscription,
+      // including plans without a trial; this is the historical subscription
+      // creation event name and keeps existing data reportable.
+      subscriptions: counts.trial_started || 0
     }
   });
 }

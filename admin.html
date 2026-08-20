@@ -46,7 +46,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
 .tag{font-size:15px;font-weight:800}
 .meta{font-size:11px;color:var(--dim);margin-left:auto}
 .link code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--sage);margin:9px 0 0;word-break:break-all;line-height:1.5}
-.funnel{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
 .stat{background:var(--raised);border-radius:12px;padding:11px 8px;text-align:center}
 .stat strong{display:block;font-size:22px;color:var(--lime);line-height:1.1}
 .stat span{display:block;font-size:9px;color:var(--sage);margin-top:4px;letter-spacing:.04em;text-transform:uppercase}
@@ -56,7 +56,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
 .note.warn{background:rgba(230,178,58,.08);border-color:rgba(230,178,58,.25);color:#e8cf95}
 .status{font-size:12px;color:var(--dim);margin-top:10px;min-height:16px}
 .status.err{color:var(--danger)}
-@media(max-width:900px){.funnel{grid-template-columns:repeat(3,1fr)}}@media(max-width:560px){.funnel{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.funnel{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.funnel{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -66,16 +66,16 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     <h1>Campaign <span class="accent">links</span></h1>
     <a href="index.html" style="color:var(--sage);font-size:13px;font-weight:700">← site</a>
   </header>
-  <p class="lede">Every link is tracked by its <code style="color:var(--lime)">ref</code>. Nothing needs registering — a
-  link works the moment it exists, and the funnel below is counted from PostHog by that same tag.</p>
+  <p class="lede">Give each person a unique <code style="color:var(--lime)">ref</code>. Their clicks, App Store handoffs,
+  paywall handoffs, and subscriptions are counted from PostHog by that same tag.</p>
 
   <section class="card">
     <h2>Build a link</h2>
     <div class="grid">
       <div>
-        <label for="ref">Tag <span style="color:var(--danger)">*</span></label>
-        <input id="ref" placeholder="tiktok_bio" autocomplete="off">
-        <p class="hint">Letters, numbers, <code>_</code> <code>-</code> <code>.</code> only. This is the name you'll see in every report.</p>
+        <label for="ref">Person / link tag <span style="color:var(--danger)">*</span></label>
+        <input id="ref" placeholder="creator_jane" autocomplete="off">
+        <p class="hint">Use a unique tag per person. Letters, numbers, <code>_</code> <code>-</code> <code>.</code> only.</p>
       </div>
       <div>
         <label for="dest">Lands on</label>
@@ -205,7 +205,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     say('built-status', 'Saved — its numbers are below.');
     render();
     // A link saved is a link the operator wants to watch, so it arrives with
-    // its counts already filled in rather than five dashes and a button.
+    // its counts already filled in rather than four dashes and a button.
     loadStats();
   };
 
@@ -249,16 +249,11 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     });
   }
 
-  // App Store sits second because that is where it happens in time, not because
-  // it is a step between the two around it — it is the other way out of the
-  // landing page, taken by people who never open onboarding.
   var STEPS = [
-    ['landing_views', 'Clicks'],
-    ['app_store_clicks', 'App Store'],
-    ['onboarding_starts', 'Started'],
-    ['reached_checkout', 'Checkout'],
-    ['trials', 'Trial'],
-    ['paid', 'Paid']
+    ['clicks', 'Clicks'],
+    ['downloads', 'Downloads'],
+    ['paywall_views', 'Paywall views'],
+    ['subscriptions', 'Subscriptions']
   ];
 
   function blanks() {
@@ -297,10 +292,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
         var f = r.body.funnel || {};
         box.innerHTML = STEPS.map(function (s) {
           var v = f[s[0]] || 0;
-          // The paid column is the one worth staring at, so it is coloured
-          // differently when a trial never converted.
-          var drop = s[0] === 'paid' && (f.trials || 0) > 0 && v === 0;
-          return '<div class="stat' + (drop ? ' drop' : '') + '"><strong>' + v + '</strong><span>' + s[1] + '</span></div>';
+          return '<div class="stat"><strong>' + v + '</strong><span>' + s[1] + '</span></div>';
         }).join('');
       });
       if (failed.length) {

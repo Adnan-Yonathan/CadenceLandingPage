@@ -106,6 +106,7 @@ Events:
 
 | Event | Fired when |
 | --- | --- |
+| `web_tracking_link_click` | a page opens with a valid `ref`, regardless of destination |
 | `web_landing_view` | the desktop page renders (a phone redirects before this, and is counted on `get.html` instead) |
 | `web_app_store_click` | an App Store link is clicked; `position` is `nav`, `hero`, `final` or `footer`, read from `data-cta` on the link rather than its index, so reordering the page cannot silently relabel a CTA |
 | `web_onboarding_step` | each step is first reached, with `step`, `index`, `chapter` |
@@ -204,16 +205,22 @@ secrets beyond the webhook ones:
 
 **`/stats` is unauthenticated.** That is a deliberate trade for a page with no
 login: the numbers load the moment a link is saved, with nothing to paste. What
-it can return is five counts for one tag, and only for a tag someone already
+it can return is four counts for one tag, and only for a tag someone already
 knows — never the PostHog key that produced them, never anything about a person.
 The origin allowlist in `withCors` keeps other websites from reading it in a
 browser, but it is not a real lock and `curl` ignores it entirely. If these
 numbers ever need to be private, the fix is Cloudflare Access in front of both
 `/admin` and `/stats`, not a token typed into a public page.
 
-The query counts `ref` as an event property OR a person property in one pass,
-because browser events carry it directly while the Stripe events inherit it from
-the person.
+The query uses the event `ref` for browser metrics and the person `ref` for the
+Stripe subscription event. Keeping those branches separate prevents a person's
+newest campaign from retroactively relabeling their earlier browser activity.
+
+The four dashboard values are clicks, downloads, paywall views, and
+subscriptions. Downloads are App Store handoffs (`web_app_store_click`), not
+confirmed installations—Apple does not send install confirmations back to a
+static website. Paywall views are the handoff to Superwall
+(`web_checkout_started`).
 
 ### Instagram and the App Store
 

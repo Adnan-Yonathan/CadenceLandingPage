@@ -4,17 +4,25 @@ const SECRET = 'whsec_testsecret123';
 const env = {
   STRIPE_WEBHOOK_SECRET: SECRET,
   POSTHOG_HOST: 'https://posthog.test',
-  POSTHOG_KEY: 'phc_test'
+  POSTHOG_KEY: 'phc_test',
+  POSTHOG_PERSONAL_KEY: 'phx_test',
+  POSTHOG_PROJECT_ID: '12345'
 };
 
 let posted = [];
 let stripeLookups = [];
 let stripeCustomerEmail = null;
+let posthogQueryResults = [];
+let posthogQueries = [];
 globalThis.fetch = async (url, init) => {
   if (String(url).startsWith('https://api.stripe.com/')) {
     stripeLookups.push(String(url));
     if (!stripeCustomerEmail) return { ok: false, status: 404 };
     return { ok: true, status: 200, json: async () => ({ email: stripeCustomerEmail }) };
+  }
+  if (String(url).includes('/api/projects/') && String(url).endsWith('/query/')) {
+    posthogQueries.push(JSON.parse(init.body).query.query);
+    return { ok: true, status: 200, json: async () => ({ results: posthogQueryResults }) };
   }
   posted.push({ url, body: JSON.parse(init.body) });
   return { ok: true, status: 200 };
@@ -191,7 +199,30 @@ r = await post({
 check('alias rejected, falls back to email', r.posted[0]?.body.distinct_id === 'appuser@example.com', r.posted[0]?.body.distinct_id);
 check('joined_by = email on fallback', r.posted[0]?.body.properties.joined_by === 'email', r.posted[0]?.body.properties.joined_by);
 
-// 10. GET rejected
+// 18. Admin stats expose the four person-link metrics.
+posthogQueryResults = [
+  ['web_tracking_link_click', 42],
+  ['web_app_store_click', 30],
+  ['web_checkout_started', 8],
+  ['trial_started', 3]
+];
+const statsRes = await worker.fetch(new Request('https://w.test/stats?ref=creator_jane&days=30'), env);
+const statsBody = await statsRes.json();
+check('stats: 200', statsRes.status === 200, `${statsRes.status}`);
+check('stats: four attribution counts',
+  statsBody.funnel?.clicks === 42 &&
+  statsBody.funnel?.downloads === 30 &&
+  statsBody.funnel?.paywall_views === 8 &&
+  statsBody.funnel?.subscriptions === 3,
+  JSON.stringify(statsBody.funnel));
+check('stats: only four dashboard fields', Object.keys(statsBody.funnel || {}).length === 4,
+  JSON.stringify(Object.keys(statsBody.funnel || {})));
+check('stats: browser and subscription attribution stay separate',
+  posthogQueries[0]?.includes("event IN ('web_tracking_link_click'") &&
+  posthogQueries[0]?.includes("event = 'trial_started' AND person.properties.ref"),
+  posthogQueries[0]);
+
+// 19. Unmatched GET rejected
 const getRes = await worker.fetch(new Request('https://w.test', { method: 'GET' }), env);
 check('GET: 405', getRes.status === 405, `${getRes.status}`);
 

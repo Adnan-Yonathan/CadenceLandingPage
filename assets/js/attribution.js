@@ -121,6 +121,14 @@
     try { window.posthog.capture(event, props || {}); } catch (e) {}
   };
 
+  // Count the tracking-link open independently of its destination. Previously
+  // /get and direct onboarding links had no common "click" event.
+  if (/^[A-Za-z0-9_.-]{1,64}$/.test(touch.ref || '')) {
+    window.cadenceTrack('web_tracking_link_click', {
+      path: window.location.pathname
+    });
+  }
+
   // The campaign, for anything that needs to forward it (the checkout hand-off,
   // the answer stash) rather than just report it.
   window.cadenceAttribution = function () {
