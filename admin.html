@@ -6,7 +6,7 @@
 <!-- Served from a public static host, marked noindex, and containing no
      credential of any kind. Link building runs entirely in the browser.
      The stats it reads are unauthenticated by choice — see the Worker's
-     /stats handler — so what anyone finding this page can learn is five
+     /stats handler — so what anyone finding this page can learn is aggregate
      counts per tag, never the PostHog key that produced them. -->
 <meta name="robots" content="noindex,nofollow">
 <title>Cadence — Campaign links</title>
@@ -46,7 +46,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
 .tag{font-size:15px;font-weight:800}
 .meta{font-size:11px;color:var(--dim);margin-left:auto}
 .link code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--sage);margin:9px 0 0;word-break:break-all;line-height:1.5}
-.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
 .stat{background:var(--raised);border-radius:12px;padding:11px 8px;text-align:center}
 .stat strong{display:block;font-size:22px;color:var(--lime);line-height:1.1}
 .stat span{display:block;font-size:9px;color:var(--sage);margin-top:4px;letter-spacing:.04em;text-transform:uppercase}
@@ -67,7 +67,7 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     <a href="index.html" style="color:var(--sage);font-size:13px;font-weight:700">← site</a>
   </header>
   <p class="lede">Give each person a unique <code style="color:var(--lime)">ref</code>. Their clicks, App Store handoffs,
-  paywall handoffs, and subscriptions are counted from PostHog by that same tag.</p>
+  paywall handoffs, subscriptions, and successful payments are counted from PostHog by that same tag.</p>
 
   <section class="card">
     <h2>Build a link</h2>
@@ -103,7 +103,6 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
       <div class="url"><code id="url"></code></div>
       <div class="row">
         <button class="primary" id="copy">Copy</button>
-        <button class="ghost" id="save">Save to list</button>
         <button class="ghost" id="open">Open</button>
       </div>
       <div class="status" id="built-status"></div>
@@ -167,12 +166,31 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     el.className = 'status' + (isErr ? ' err' : '');
   }
 
+  function saveLink(link) {
+    var all = load();
+    var previous = all.find(function (l) { return l.ref === link.ref; });
+    var saved = Object.assign({}, link, {
+      // A creator tag is the stable identity for its stats. Regenerating it can
+      // update the destination without pretending the link was first created
+      // today.
+      created: previous && previous.created ? previous.created : link.created,
+      updated: Date.now()
+    });
+    all = all.filter(function (l) { return l.ref !== saved.ref; });
+    all.unshift(saved);
+    localStorage.setItem(STORE, JSON.stringify(all));
+    built = saved;
+  }
+
   $('make').onclick = function () {
     built = build();
     if (!built) return;
+    saveLink(built);
     $('url').textContent = built.url;
     $('out').classList.add('on');
-    say('built-status', '');
+    say('built-status', 'Saved automatically — live tracking is shown below.');
+    render();
+    loadStats();
   };
 
   $('clear').onclick = function () {
@@ -191,22 +209,6 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
 
   $('open').onclick = function () {
     if (built) window.open(built.url, '_blank', 'noopener');
-  };
-
-  $('save').onclick = function () {
-    if (!built) return;
-    var all = load();
-    // Re-saving a tag replaces it rather than stacking duplicates, since the
-    // tag is the identity — two entries with one tag would report one number
-    // twice and read as double the traffic.
-    all = all.filter(function (l) { return l.ref !== built.ref; });
-    all.unshift(built);
-    localStorage.setItem(STORE, JSON.stringify(all));
-    say('built-status', 'Saved — its numbers are below.');
-    render();
-    // A link saved is a link the operator wants to watch, so it arrives with
-    // its counts already filled in rather than four dashes and a button.
-    loadStats();
   };
 
   function load() {
@@ -253,7 +255,8 @@ button{border:0;border-radius:999px;padding:12px 22px;font:inherit;font-weight:8
     ['clicks', 'Clicks'],
     ['downloads', 'Downloads'],
     ['paywall_views', 'Paywall views'],
-    ['subscriptions', 'Subscriptions']
+    ['subscriptions', 'Subscriptions'],
+    ['payments', 'Payments']
   ];
 
   function blanks() {

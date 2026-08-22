@@ -43,7 +43,7 @@ export default {
     // because answering it needs a PostHog PERSONAL api key — full read access
     // to the project — which must never be shipped to a browser. That reason
     // still holds even though the endpoint itself is now unauthenticated: what
-    // it returns is four counts for one tag, not the key that produced them.
+    // it returns is aggregate counts for one tag, not the key that produced them.
     if (url.pathname === '/stats') {
       return withCors(await stats(url, env), origin);
     }
@@ -170,7 +170,10 @@ async function stats(url, env) {
           event IN ('web_tracking_link_click', 'web_landing_view', 'web_app_store_click', 'web_checkout_started')
           AND properties.ref = '${ref}'
         )
-        OR (event = 'trial_started' AND person.properties.ref = '${ref}')
+        OR (
+          event IN ('trial_started', 'subscription_paid')
+          AND person.properties.ref = '${ref}'
+        )
       )
     GROUP BY event
   `;
@@ -213,7 +216,11 @@ async function stats(url, env) {
       // checkout.session.completed emits trial_started for every subscription,
       // including plans without a trial; this is the historical subscription
       // creation event name and keeps existing data reportable.
-      subscriptions: counts.trial_started || 0
+      subscriptions: counts.trial_started || 0,
+      // Every non-zero invoice reported by Stripe, including renewals. The
+      // billing_reason property on the underlying event can separate first
+      // payments from renewal revenue in PostHog when needed.
+      payments: counts.subscription_paid || 0
     }
   });
 }

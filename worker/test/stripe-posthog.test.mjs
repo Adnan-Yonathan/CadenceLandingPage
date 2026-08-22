@@ -199,27 +199,30 @@ r = await post({
 check('alias rejected, falls back to email', r.posted[0]?.body.distinct_id === 'appuser@example.com', r.posted[0]?.body.distinct_id);
 check('joined_by = email on fallback', r.posted[0]?.body.properties.joined_by === 'email', r.posted[0]?.body.properties.joined_by);
 
-// 18. Admin stats expose the four person-link metrics.
+// 18. Admin stats expose the complete creator-link funnel, including payments.
 posthogQueryResults = [
   ['web_tracking_link_click', 42],
   ['web_app_store_click', 30],
   ['web_checkout_started', 8],
-  ['trial_started', 3]
+  ['trial_started', 3],
+  ['subscription_paid', 2]
 ];
 const statsRes = await worker.fetch(new Request('https://w.test/stats?ref=creator_jane&days=30'), env);
 const statsBody = await statsRes.json();
 check('stats: 200', statsRes.status === 200, `${statsRes.status}`);
-check('stats: four attribution counts',
+check('stats: five attribution counts',
   statsBody.funnel?.clicks === 42 &&
   statsBody.funnel?.downloads === 30 &&
   statsBody.funnel?.paywall_views === 8 &&
-  statsBody.funnel?.subscriptions === 3,
+  statsBody.funnel?.subscriptions === 3 &&
+  statsBody.funnel?.payments === 2,
   JSON.stringify(statsBody.funnel));
-check('stats: only four dashboard fields', Object.keys(statsBody.funnel || {}).length === 4,
+check('stats: only five dashboard fields', Object.keys(statsBody.funnel || {}).length === 5,
   JSON.stringify(Object.keys(statsBody.funnel || {})));
 check('stats: browser and subscription attribution stay separate',
   posthogQueries[0]?.includes("event IN ('web_tracking_link_click'") &&
-  posthogQueries[0]?.includes("event = 'trial_started' AND person.properties.ref"),
+  posthogQueries[0]?.includes("event IN ('trial_started', 'subscription_paid')") &&
+  posthogQueries[0]?.includes("AND person.properties.ref"),
   posthogQueries[0]);
 
 // 19. Unmatched GET rejected

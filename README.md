@@ -181,8 +181,8 @@ comma-separated secrets.
 
 ### The admin page
 
-`admin.html` builds campaign links and shows the funnel for each one. Save a
-link and its numbers appear underneath it; remove it and the row goes away
+`admin.html` builds campaign links and shows the funnel for each one. Generate a
+link and it is saved automatically with its numbers underneath it; remove it and the row goes away
 while the link keeps working, because the tag was never registered anywhere in
 the first place.
 
@@ -191,8 +191,8 @@ are the other two, and the hint under the selector changes with the choice —
 a bio link cannot reach onboarding, and reading its zeros there as a drop-off
 would be a misreading rather than a finding.
 
-Saved links live in `localStorage`: this is a tool, not a database. Re-saving a
-tag replaces the old entry rather than stacking a duplicate, since the tag is
+Saved links live in `localStorage`: this is a tool, not a database. Regenerating
+a tag updates the saved link rather than stacking a duplicate, since the tag is
 the identity.
 
 Stats come from `GET /stats?ref=…&days=…` on the Worker, which needs two
@@ -216,11 +216,12 @@ The query uses the event `ref` for browser metrics and the person `ref` for the
 Stripe subscription event. Keeping those branches separate prevents a person's
 newest campaign from retroactively relabeling their earlier browser activity.
 
-The four dashboard values are clicks, downloads, paywall views, and
-subscriptions. Downloads are App Store handoffs (`web_app_store_click`), not
+The five dashboard values are clicks, downloads, paywall views, subscriptions,
+and successful payments. Downloads are App Store handoffs (`web_app_store_click`), not
 confirmed installations—Apple does not send install confirmations back to a
 static website. Paywall views are the handoff to Superwall
-(`web_checkout_started`).
+(`web_checkout_started`). Payments are non-zero Stripe invoices
+(`subscription_paid`), including renewals.
 
 ### Instagram and the App Store
 
