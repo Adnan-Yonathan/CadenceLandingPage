@@ -37,10 +37,9 @@
       // on a phone is already sold enough to tap; the desktop page exists to
       // persuade, and a phone cannot install anything from it anyway.
       //
-      // Via get.html rather than the store URL directly, because that page is
-      // what knows how to escape Instagram's webview — sending a phone straight
-      // to apps.apple.com would put every in-app visitor back on the dead link
-      // this whole path exists to route around.
+      // Via get.html rather than the store URL directly, so the click is
+      // recorded against its campaign before the hand-off. The page redirects
+      // on its own; it no longer has anything to teach an in-app browser.
       //
       // Every inbound param rides along so the campaign survives the hop.
       var next = new URL('get.html', location.href);
@@ -62,9 +61,8 @@
 <script>
   window.addEventListener('DOMContentLoaded', function () {
     if (window.cadenceTrack) window.cadenceTrack('web_landing_view');
-    // App Store taps are tracked and handled by appstore.js, which also carries
-    // the Instagram in-app browser workaround. It binds its own listeners, so
-    // there is nothing to wire here.
+    // App Store taps are tracked by appstore.js, which binds its own
+    // listeners, so there is nothing to wire here.
   });
 </script>
 

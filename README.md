@@ -59,10 +59,10 @@ so a few pixels are trimmed off the bottom of each.
 
 ## App Store handoff
 
-- Mobile visitors to the root page go directly to the App Store before the
-  landing page renders.
+- Mobile visitors to the root page are sent to `/get` before the landing page
+  renders, which records the click and hands off to the App Store.
 - `landing-mobile.html` remains available for old inbound links but immediately
-  redirects every visitor to the same App Store product page.
+  redirects every visitor into onboarding.
 - Incoming Apple campaign parameters (`pt`, `ct`, and `mt`) carry through to
   the redirect URL. With `pt` present, an
   incoming `utm_campaign` or `utm_source` supplies `ct` when omitted.
@@ -225,23 +225,18 @@ static website. Paywall views are the handoff to Superwall
 
 ### Instagram and the App Store
 
-A link opened from an Instagram bio does not run in Safari. It runs in a
-WKWebView Instagram owns, and that webview has no second window:
-`target="_blank"` is ignored and `window.open()` returns null, so the App Store
-badge registers the tap and does nothing. Facebook, TikTok and most other
-in-app browsers behave the same way.
+There used to be a problem here. A link opened from an Instagram bio runs in a
+WKWebView Instagram owns, and that webview would not hand off to the App Store:
+`target="_blank"` ignored, `window.open()` null, the badge registering the tap
+and doing nothing. `assets/js/appstore.js` routed around it with the
+`itms-apps://` scheme, and `get.html` was an instruction page — no button,
+because no button could work — teaching the two taps (`⋯` → **Open in browser**)
+that got a runner out of the webview.
 
-`assets/js/appstore.js` handles it. The escape is not a new window but the
-`itms-apps://` scheme: the webview cannot render it, so iOS hands it to the
-native App Store app. That is a system-level handoff, which is why it clears a
-sandbox `window.open` cannot.
-
-It is not guaranteed — Instagram revises this webview often. So the attempt is
-timed: if the page is still visible 1.5s later, nothing happened, and a sheet
-appears naming the exact control (`⋯` → **Open in browser**) with a copy-link
-button. Visibility at fire time is the signal, deliberately not `pagehide`,
-which reports an unloading document rather than a successful handoff and would
-suppress the sheet in the very case that needs it.
+Instagram fixed it. A plain `apps.apple.com` link now opens the store from
+inside the in-app browser, so both workarounds are gone: `appstore.js` records
+the tap and lets the link navigate, and `get.html` redirects everyone on
+arrival.
 
 `get.html` is the URL to put in a bio: `cadencerun.app/get?ref=…`, and it is
 also where the landing page sends every phone. A visitor who tapped a link on a
@@ -249,28 +244,24 @@ phone is already sold enough to tap, and cannot install anything from the pitch
 anyway; the desktop page keeps the pitch because a desktop visitor has nowhere
 else to go.
 
-The hop goes through this page rather than straight to `apps.apple.com`,
-because this is the page that knows how to escape Instagram's webview. Sending
-a phone directly to the store would drop every in-app visitor back onto the
-dead link the whole path exists to route around.
+The hop goes through this page rather than straight to `apps.apple.com` so the
+click is recorded against its campaign before the hand-off. It shows a spinner,
+records `web_app_store_click`, then redirects after a 400ms beat so the capture
+is not cancelled in flight by the navigation, using `replace` so the back button
+returns to Instagram rather than bouncing off a page that immediately redirects
+again.
 
-It has two jobs depending on who opens it.
-
-In an in-app browser it shows instructions and nothing else — deliberately no
-button, because no button there can work. An arrow points at the top-right
-corner where Instagram keeps its `⋯`, and the three steps end on a promise the
-page itself keeps: reopen this in a real browser and the App Store opens on its
-own.
-
-Anywhere else it is a turnstile. It records the click and redirects, after a
-400ms beat so the capture is not cancelled in flight by the navigation, using
-`replace` so the back button returns to Instagram rather than bouncing off a
-page that immediately redirects again.
+The old instructions survive as the floor, not the plan. If the page is still
+visible 2.5s after the redirect was issued, it never happened: a button appears,
+and in Instagram or Facebook the two-tap steps appear under it. Visibility at
+fire time is the signal, deliberately not `pagehide`, which reports an unloading
+document rather than a successful hand-off and would suppress the fallback in
+the very case that needs it.
 
 Events: `web_app_store_click` carries `in_app_browser` (`instagram`,
-`facebook`, `tiktok`, … or `none`); `web_app_store_blocked` fires when the
-fallback sheet is shown, so the rate of genuine breakage is measurable rather
-than guessed at.
+`facebook`, `tiktok`, … or `none`); `web_app_store_blocked` now fires only when
+that fallback is reached, so a regression in Instagram's webview shows up as a
+rate rather than as silence.
 
 ### How a link reaches a payment
 

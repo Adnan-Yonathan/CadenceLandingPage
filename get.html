@@ -17,19 +17,6 @@ color:var(--cream);font-family:Manrope,system-ui,-apple-system,sans-serif;-webki
 display:flex;flex-direction:column;align-items:center;justify-content:center;
 padding:calc(env(safe-area-inset-top) + 84px) 22px calc(env(safe-area-inset-bottom) + 34px);text-align:center}
 
-/* The arrow lives against the top-right corner because that is where the
-   control it refers to sits — in Instagram's own chrome, just above this
-   document. It cannot point at the button directly, so it points at the corner
-   and the copy names the glyph. */
-.pointer{position:fixed;top:calc(env(safe-area-inset-top) + 6px);right:14px;z-index:3;
-display:flex;flex-direction:column;align-items:flex-end;gap:2px;pointer-events:none;
-animation:nudge 1.8s ease-in-out infinite}
-.pointer svg{width:60px;height:62px;color:var(--lime);filter:drop-shadow(0 3px 10px rgba(0,0,0,.5))}
-.pointer b{font-size:12px;font-weight:800;color:var(--lime);letter-spacing:.02em;
-background:rgba(15,28,18,.82);border:1px solid rgba(163,209,58,.3);border-radius:999px;padding:4px 11px;
-white-space:nowrap;margin-right:2px}
-@keyframes nudge{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,-7px)}}
-
 .icon{width:104px;height:104px;border-radius:26px;display:block;margin:0 auto 24px;
 box-shadow:0 0 0 1px rgba(241,240,228,.08),0 20px 54px rgba(0,0,0,.55),0 0 70px rgba(163,209,58,.16)}
 h1{font-size:31px;line-height:1.1;letter-spacing:-.045em;margin:0 0 12px}
@@ -45,42 +32,24 @@ color:var(--lime);font-style:normal;font-size:12px;font-weight:800;display:grid;
 .glyph{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:25px;
 padding:0 8px;margin:0 2px;border-radius:7px;background:var(--raised);border:1px solid var(--line);
 color:var(--cream);font-size:13px;font-weight:800;vertical-align:middle;letter-spacing:.06em}
+.cta{display:block;width:100%;max-width:360px;margin:20px auto 0;border-radius:999px;min-height:52px;
+line-height:52px;background:var(--lime);color:#10200c;font-weight:800;font-size:16px;text-decoration:none}
 .tagline{font-size:13px;line-height:1.5;color:var(--dim);margin:28px 0 0;max-width:300px}
 
-/* Shown only while a real browser is being redirected — a beat of explanation
-   so the jump does not look like a glitch. */
-.sending{display:none;flex-direction:column;align-items:center;gap:16px}
+/* The default state: a beat of explanation while the redirect fires, so the
+   jump does not look like a glitch. */
+.sending{display:flex;flex-direction:column;align-items:center;gap:16px}
 .sending .ring{width:34px;height:34px;border-radius:50%;border:3px solid rgba(241,240,228,.13);
 border-top-color:var(--lime);animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-body[data-mode="sending"] .in-app{display:none}
-body[data-mode="sending"] .sending{display:flex}
-body[data-mode="sending"] .pointer{display:none}
+
+/* Only reached when the redirect demonstrably did not happen. */
+.stuck{display:none}
+body[data-mode="stuck"] .sending{display:none}
+body[data-mode="stuck"] .stuck{display:block}
 </style>
 </head>
-<body data-mode="in-app">
-
-  <div class="pointer" id="pointer" aria-hidden="true">
-    <svg viewBox="0 0 60 62" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 58C8 34 20 14 46 8" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 9"/>
-      <path d="M34 6.5L47.5 7L45 20.5" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <b>up here</b>
-  </div>
-
-  <div class="in-app">
-    <img class="icon" src="images/app-icon.png" alt="Cadence" width="104" height="104">
-    <h1>Get <span class="accent">Cadence</span></h1>
-    <p class="lede" id="lede">Instagram's browser can't open the App&nbsp;Store. Two taps and you're there.</p>
-
-    <div class="steps">
-      <div class="step"><i>1</i><span>Tap the <span class="glyph">•••</span> menu, top right</span></div>
-      <div class="step"><i>2</i><span>Choose <span class="glyph" style="font-size:12px;letter-spacing:0">Open in browser</span></span></div>
-      <div class="step"><i>3</i><span>The App&nbsp;Store opens on its own</span></div>
-    </div>
-
-    <p class="tagline">The running coach that keeps you accountable.</p>
-  </div>
+<body data-mode="sending">
 
   <div class="sending" aria-live="polite">
     <img class="icon" src="images/app-icon.png" alt="Cadence" width="104" height="104" style="margin-bottom:6px">
@@ -88,50 +57,70 @@ body[data-mode="sending"] .pointer{display:none}
     <p class="lede" style="margin:0">Opening the App&nbsp;Store…</p>
   </div>
 
+  <div class="stuck">
+    <img class="icon" src="images/app-icon.png" alt="Cadence" width="104" height="104">
+    <h1>Get <span class="accent">Cadence</span></h1>
+    <p class="lede" id="lede" style="margin-left:auto;margin-right:auto">Tap below to open the App&nbsp;Store.</p>
+
+    <a class="cta" id="cta" data-cta="get_page_fallback" href="https://apps.apple.com/us/app/cadence-run-coach/id6783027833">Open the App Store</a>
+
+    <div class="steps" id="steps" style="margin:22px auto 0;display:none">
+      <div class="step"><i>1</i><span>Tap the <span class="glyph">•••</span> menu, top right</span></div>
+      <div class="step"><i>2</i><span>Choose <span class="glyph" style="font-size:12px;letter-spacing:0">Open in browser</span></span></div>
+      <div class="step"><i>3</i><span>The App&nbsp;Store opens on its own</span></div>
+    </div>
+
+    <p class="tagline" style="margin-left:auto;margin-right:auto">The running coach that keeps you accountable.</p>
+  </div>
+
 <script src="assets/js/attribution.js"></script>
 <script src="assets/js/appstore.js"></script>
 <script>
-// The one URL a bio gets, and it has two entirely different jobs depending on
-// who opens it.
-//
-// Inside Instagram's webview the App Store cannot be reached at all — no
-// button here would work, which is why there is no button. The page's whole
-// purpose in that case is to teach the two taps that get the runner out, and
-// step 3 is a promise this file keeps: once the link reopens in a real
-// browser, the redirect below fires and they never touch a button.
-//
-// Anywhere else, this page is a turnstile. It records the click and gets out
-// of the way.
+// The one URL a bio gets, and it has one job: record the click and get out of
+// the way. Instagram's webview used to swallow App Store links, so this page
+// spent its life teaching runners how to escape it by hand. That is fixed —
+// the link opens the store directly now, in-app browser or not — so the
+// instructions are no longer the page, they are the floor under it: they
+// appear only if the redirect provably did not take.
 (function () {
   'use strict';
 
   var APP_STORE = 'https://apps.apple.com/us/app/cadence-run-coach/id6783027833';
 
-  function go() {
-    document.body.setAttribute('data-mode', 'sending');
-    if (window.cadenceTrack) {
-      window.cadenceTrack('web_app_store_click', { position: 'get_page', in_app_browser: 'none' });
+  function stuck(app) {
+    if (document.body.getAttribute('data-mode') === 'stuck') return;
+    document.body.setAttribute('data-mode', 'stuck');
+
+    // Instagram and Facebook are the only menus worth naming; anywhere else the
+    // steps would be guessing at a control that may not exist, and the button
+    // above them is the honest answer.
+    if (app === 'instagram' || app === 'facebook') {
+      document.getElementById('steps').style.display = 'block';
+      document.getElementById('lede').textContent =
+        'Tap below — or, if nothing happens, get there in two taps.';
     }
+    if (window.cadenceTrack) window.cadenceTrack('web_app_store_blocked', { app: app || 'none' });
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    var app = window.cadenceInAppBrowser ? window.cadenceInAppBrowser() : '';
+
+    if (window.cadenceTrack) {
+      window.cadenceTrack('web_app_store_click', { position: 'get_page', in_app_browser: app || 'none' });
+    }
+
+    // Still here well after the navigation was issued means it never happened.
+    // Visibility is the signal rather than any event the webview reports: a
+    // swallowed navigation raises no error, and a successful one backgrounds
+    // this page.
+    setTimeout(function () { if (!document.hidden) stuck(app); }, 2500);
+
     // A short beat before leaving. The capture above travels over the network,
     // and navigating immediately can cancel it in flight — which would lose
     // exactly the event this page exists to record. `replace` rather than
     // `assign` so the back button returns to Instagram rather than trapping
     // the runner on a page that instantly redirects again.
     setTimeout(function () { window.location.replace(APP_STORE); }, 400);
-  }
-
-  window.addEventListener('DOMContentLoaded', function () {
-    var app = window.cadenceInAppBrowser ? window.cadenceInAppBrowser() : '';
-
-    if (!app) { go(); return; }
-
-    // Instagram is the common case and gets named. Anything else keeps the
-    // wording generic rather than guessing at a menu it may not have.
-    if (app !== 'instagram') {
-      document.getElementById('lede').textContent =
-        "This in-app browser can't open the App Store. Two taps and you're there.";
-    }
-    if (window.cadenceTrack) window.cadenceTrack('web_app_store_blocked', { app: app });
   });
 })();
 </script>
