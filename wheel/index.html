@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spin the Cadence Wheel</title>
+  <meta name="description" content="Spin the Cadence challenge wheel and let the run choose you.">
+  <meta name="theme-color" content="#0f1c12">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Spin the Cadence Wheel">
+  <meta property="og:description" content="No negotiating. Spin once and run what lands.">
+  <meta property="og:image" content="https://cadencerun.app/images/logo.png">
+  <link rel="icon" href="../images/logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="../images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/wheel.css">
+  <script src="../assets/js/attribution.js"></script>
+  <script src="../assets/js/wheel.js" defer></script>
+</head>
+<body>
+  <main class="wheel-page">
+    <header class="wheel-nav">
+      <a class="brand" href="../" aria-label="Cadence home">
+        <img src="../images/logo.png" alt="" width="34" height="34">
+        <span>Cadence</span>
+      </a>
+      <span class="tier">JOE</span>
+    </header>
+
+    <section class="challenge" aria-labelledby="wheel-title">
+      <div class="challenge-copy">
+        <p class="eyebrow">TODAY'S CHALLENGE</p>
+        <h1 id="wheel-title">Let the run<br>choose you.</h1>
+        <p class="intro">One spin. Whatever lands is what you run.</p>
+      </div>
+
+      <div class="reel-shell" id="reel-shell">
+        <div class="reel-window" aria-hidden="true">
+          <div class="reel-strand" id="reel-strand"></div>
+          <div class="landing-band">
+            <span class="ticks ticks-left"></span>
+            <span class="ticks ticks-right"></span>
+          </div>
+          <div class="reel-shade"></div>
+        </div>
+
+        <p class="result" id="result" role="status" aria-live="polite"></p>
+        <button class="spin-button" id="spin-button" type="button">
+          <span>Spin the wheel</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2a10 10 0 1 0 9.33 6.4 1 1 0 0 0-1.87.72A8 8 0 1 1 17.7 6H15a1 1 0 0 0 0 2h5a1 1 0 0 0 1-1V2a1 1 0 1 0-2 0v2.1A9.96 9.96 0 0 0 12 2Z"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
