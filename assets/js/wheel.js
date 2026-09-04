@@ -12,7 +12,8 @@
     { main: '12K', note: 'Settle in early' }
   ];
 
-  var passes = 3;
+  var passes = 5;
+  var spinDuration = 5200;
   var strand = document.getElementById('reel-strand');
   var button = document.getElementById('spin-button');
   var result = document.getElementById('result');
@@ -20,6 +21,9 @@
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   var landingIndex = Math.floor(Math.random() * entries.length);
   var hasSpun = false;
+  var audioContext = null;
+  var lastTickRow = null;
+  var lastTickAt = 0;
 
   function row(entry) {
     var node = document.createElement('div');
@@ -47,9 +51,52 @@
 
   function moveTo(offset, animate) {
     strand.style.transition = animate
-      ? 'transform 3.2s cubic-bezier(.08,.72,.04,1.03), filter 3.2s ease-out'
+      ? 'transform ' + spinDuration + 'ms cubic-bezier(.08,.72,.04,1.03), filter ' + spinDuration + 'ms ease-out'
       : 'none';
     strand.style.transform = 'translateY(' + (-offset * rowHeight()) + 'px)';
+  }
+
+  function prepareAudio() {
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!audioContext) audioContext = new AudioContext();
+    if (audioContext.state === 'suspended') audioContext.resume();
+  }
+
+  function tick() {
+    if (!audioContext || audioContext.state !== 'running') return;
+
+    var now = audioContext.currentTime;
+    var oscillator = audioContext.createOscillator();
+    var gain = audioContext.createGain();
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(1120, now);
+    oscillator.frequency.exponentialRampToValueAtTime(760, now + .018);
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(.075, now + .002);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + .026);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + .03);
+  }
+
+  function trackTicks(startedAt) {
+    if (!hasSpun) return;
+
+    var matrix = new DOMMatrixReadOnly(window.getComputedStyle(strand).transform);
+    var currentRow = Math.floor(Math.abs(matrix.m42) / rowHeight());
+    var now = performance.now();
+
+    if (currentRow !== lastTickRow && now - lastTickAt > 38) {
+      tick();
+      lastTickRow = currentRow;
+      lastTickAt = now;
+    }
+
+    if (now - startedAt < spinDuration) {
+      requestAnimationFrame(function () { trackTicks(startedAt); });
+    }
   }
 
   function restingOffset() { return entries.length + landingIndex - 1; }
@@ -63,6 +110,7 @@
   button.addEventListener('click', function () {
     if (hasSpun) return;
     hasSpun = true;
+    prepareAudio();
     button.disabled = true;
     button.querySelector('span').textContent = 'Spinning…';
     result.textContent = '';
@@ -80,9 +128,12 @@
       requestAnimationFrame(function () {
         strand.style.filter = 'blur(0)';
         moveTo(spinOffset(), true);
+        lastTickRow = null;
+        lastTickAt = 0;
+        trackTicks(performance.now());
       });
     });
-    window.setTimeout(finish, 3200);
+    window.setTimeout(finish, spinDuration);
   });
 
   function finish() {
